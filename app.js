@@ -59,7 +59,7 @@ async function verse(){
     return v
 }
 const configuration = new Configuration({
-  apiKey: process.env.OPEN_AI_KEY="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",
+  apiKey: process.env.OPEN_AI_KEY="",
 });
 
 async function ai(prompt_msg){
