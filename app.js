@@ -87,7 +87,7 @@ login({ appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8')) }, (err, 
                     case "log:subscribe":
                     let trid = event.threadID
                         api.getThreadInfo(trid, (err, call) => {
-                        	var gcName = call.threadName;
+                            var gcName = call.threadName;
                             var arr = call.participantIDs;
                             var allcount = arr.length;
                             if (call.isGroup) {
