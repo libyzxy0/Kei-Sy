@@ -59,7 +59,7 @@ async function verse(){
     return v
 }
 const configuration = new Configuration({
-  apiKey: process.env.OPEN_AI_KEY="",
+  apiKey: process.env.OPEN_AI_KEY="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",
 });
 
 async function ai(prompt_msg){
@@ -87,12 +87,12 @@ login({ appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8')) }, (err, 
                     case "log:subscribe":
                     let trid = event.threadID
                         api.getThreadInfo(trid, (err, call) => {
-                            var gcName = call.threadName;
+                        	var gcName = call.threadName;
                             var arr = call.participantIDs;
                             var allcount = arr.length;
                             if (call.isGroup) {
                                 let mess = {
-                                    body: `Hi there, ${event.logMessageData.addedParticipants[0].fullName}\n┌────── ～●～ ──────┐\n----- Welcome to ${gcName} -----\n└────── ～●～ ──────┘\nYour'e the ${allcount} member of this gc!`,
+                                    body: `Hi there, ${event.logMessageData.addedParticipants[0].fullName} 😊\n┌────── ～●～ ──────┐\n─── Welcome to ${gcName} ───\n└────── ～●～ ──────┘\nYour'e the ${allcount} member of this gc!`,
                                     mentions: [{
                                         tag: event.logMessageData.addedParticipants[0].fullName,
                                         id: event.logMessageData.addedParticipants[0].userFbId
