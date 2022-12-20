@@ -4,6 +4,7 @@ const http = require('https');
 const login = require("fca-unofficial");
 const axios = require("axios");
 const request = require('request');
+const cron = require('node-cron');
 const { Configuration, OpenAIApi } = require("openai");
 const cd = {};
 const msgs = {};
@@ -19,7 +20,9 @@ const config = {
 	saijiLoves: [
 	'100081144393297', 
 	'100027037117607', 
-	'100025001870534'
+	'100025001870534', 
+	'100029962340759', 
+	''
     ], 
 	banned:[
     '',
@@ -67,9 +70,24 @@ return response.data;
 login({ appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8')) }, (err, api) => {
     if (err) return console.error(err);
     api.setOptions({ listenEvents: true });
-    const listenEmitter = api.listen(async (err, event) => {
-        if (err) return console.error(err);
-        
+
+cron.schedule('0 7 * * *', () => {
+	api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		if (info.isGroup && info.isSubscribed) {
+		api.sendMessage("Good Morning Everyone! I wish you a lovely day.🥀\n\n~Auto Greet~", info.threadID);
+		}
+	  }) 
+	})
+},{
+	schedule: true, 
+	timezone: "Asia/Manila" 
+});
+api.sendMessage("Bot started...", admin[1]);
+
+const listenEmitter = api.listen(async (err, event) => {
+    if (err) return console.error(err);     
+      
         switch (event.type) {
         	case "event":
                 switch (event.logMessageType) {
@@ -151,8 +169,22 @@ attachment: fs.createReadStream(__dirname + '/bye.gif')
         let input = event.body;
         msgs[msgid] = input;
 
-        //─────┐ Unsent a bot message ┌─────
-       if(input.startsWith(`${prefix}unsent`)){
+if (input.startsWith(`${prefix}getlink`)) {
+	const tinyurl = require("tinyurl");
+	if (event.type != "message_reply") return
+    if (event.messageReply.attachments.length < 1) {
+    	api.sendMessage("err", event.threadID, event.messageID);
+    } else if (event.messageReply.attachments.length > 1) {
+    	api.sendMessage("err", event.threadID, event.messageID);
+          }
+          else if ((event.messageReply.attachments.length === 1)) {
+            const url = event.messageReply.attachments[0].url;
+            var a = await tinyurl.shorten(url);
+            api.sendMessage(a, event.threadID, event.messageID);
+          }
+}
+
+else if(input.startsWith(`${prefix}unsent`)){
               let data = input.split(" ");
               if(data.length < 5){
                 api.getUserInfo(event.senderID, (err, data) => {
@@ -207,8 +239,9 @@ attachment: fs.createReadStream(__dirname + '/bye.gif')
                 }
                 
                 if (event.body != null) {
-                let input = event.body;
+                let input = event.body;      
 	
+ 
 if(input.startsWith(`${prefix}help`)) {
 	let data = input.split(`${prefix}help `)
     let rqt = qt();
@@ -229,7 +262,7 @@ if(input.startsWith(`${prefix}help`)) {
         msg += `\n\n• ${prefix}pin [txt]\n\n• ${prefix}showpinned []\n\n• ${prefix}pdt [txt]\n\n• ${prefix}docs []\n\n• ${prefix}qr [txt]\n\n• ${prefix}cuddle []\n\n• ${prefix}kei [msg]\n\n• ${prefix}sleep []\n\n• ${prefix}kick [tag]\n\n• ${prefix}sendMsgAdm [msg]\n\n\n• Page » [4/5]`;
         
     } else if (data[1] == 5) {
-        msg += `\n\n• ${prefix}setall [txt]\n\n• ${prefix}lulcat [tag]\n\n• ${prefix}help [num]\n\n\n• Page » [5/5]`;
+        msg += `\n\n• ${prefix}setall [txt]\n\n• ${prefix}lulcat [tag]\n\n• ${prefix}help [num]\n\n• ${prefix}getlink [rep]\n\n• ${prefix}peeposign [txt]\n\n• ${prefix}msg [?]\n\n\n• Page » [5/5]`;
         
     } else {
     	msg += `${defaultPage}`;
@@ -252,7 +285,20 @@ else if (input.startsWith(`${prefix}info`)) {
         }, event.threadID,event.messageID);
    }
 }                           
-                          
+ 
+
+
+else if (input.startsWith(`${prefix}test`)){
+	api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		console.log(info.threadID);
+	  })
+	})
+}
+
+
+
+                         
 else if (input.startsWith(`Sai`)) {
 	let data = input.split(" ");
     if (data.length < 2) {
@@ -335,6 +381,22 @@ rqs.pipe(file);
 file.on('finish', function () {
 	api.sendMessage({
         attachment: fs.createReadStream(__dirname + '/cache/cuddle.png')
+    }, event.threadID, event.messageID)
+   }) 
+  })
+ }) 
+}
+
+else if (input.startsWith(`${prefix}play`)) {
+	let que = input.split(" ");
+	let a = axios.get(`https://manhict.tech/api/ytplay?query=${que[1]}&apikey=E8QAKPmf`)
+        a.then(response => {
+		var file = fs.createWriteStream("cache/play.mp3");
+        http.get(response.data.result.audio, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
+	api.sendMessage({
+        attachment: fs.createReadStream(__dirname + '/cache/play.mp3')
     }, event.threadID, event.messageID)
    }) 
   })
@@ -452,6 +514,26 @@ rqs.pipe(file);
 file.on('finish', function () {
 	api.sendMessage({
         attachment: fs.createReadStream(__dirname + '/cache/biden.png')
+    }, event.threadID, event.messageID)
+   }) 
+  })
+ } 
+}
+
+else if (input.startsWith(`${prefix}peeposign`)) {
+	let data = input.split(" ");
+	let que = input;
+	que = que.substring(10);
+    if (data.length < 2) {
+    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}peeposign <txt>`, event.threadID, event.messageID);
+    } else {
+    	var url = `https://vacefron.nl/api/peeposign?text=${que}`
+		var file = fs.createWriteStream("cache/peeposign.png");
+        http.get(url, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
+	api.sendMessage({
+        attachment: fs.createReadStream(__dirname + '/cache/peeposign.png')
     }, event.threadID, event.messageID)
    }) 
   })
@@ -605,26 +687,6 @@ else if (input.startsWith(`${prefix}doublestruck`)) {
  } 
 }
 
-else if (input.startsWith(`${prefix}kei`)) {
-	let data = input.split(" ");
-    if (data.length < 2) {
-    if (saijiLoves.includes(event.senderID)) {
-    	api.setMessageReaction("😍", 
-event.messageID, (err) => {}, true);
-        api.sendMessage("Bakit lolovesss??", event.threadID, event.messageID);
-	} else {
-		api.setMessageReaction("🖕", event.messageID, (err) => {}, true);
-		api.sendMessage("Bakit nnmn?, tanginamo.", event.threadID, event.messageID);
-    }
-    } else {
-    	let txt = data.join(" ");
-	    let a = axios.get(`https://libyzxy0-likify-api.libyzxy0.repl.co/api/kei/?message=${txt}`)
-        a.then(response => {
-        	api.sendMessage(`${response.data.message}`, event.threadID, event.messageID);
-  }) 
- } 
-}
-
 else if (input.startsWith(`${prefix}pdt`)) {
 	let data = input.split(" ");
     if (data.length < 2) {
@@ -697,7 +759,7 @@ else if (input.startsWith(`${prefix}add`)){
 	let que = input;
 	que = que.substring(4);
 	var uid = que;
-	api.removeUserFromGroup(uid, event.threadID, (err,data) => {
+	api.addUserFromGroup(uid, event.threadID, (err,data) => {
         if (err) return api.sendMessage("Err", event.threadID);
    }) 
 }
@@ -712,6 +774,41 @@ else if (input.startsWith(`${prefix}uid`)) {
 
 else if (input.startsWith(`${prefix}gid`)) {
     api. sendMessage(`${event.threadID}`, event.threadID, event.messageID);
+}
+
+else if (input.startsWith(`${prefix}stalk`)) {
+	var uid = Object.keys(event.mentions)[0];
+	api.getUserInfo(parseInt(uid), (err, data) => {
+		
+	var picture = `https://graph.facebook.com/${uid}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+	var file = fs.createWriteStream("cache/stalk.png");
+    var rqs = request(encodeURI(`${picture}`));
+    rqs.pipe(file);
+    file.on('finish', function () {	
+    console.log(data)
+    var name = data[uid].name;
+    var username = data[uid].vanity;
+    var herGender = data[uid].gender;
+    var type = data[uid].type;
+    var url = data[uid].profileUrl;
+    var firstName = data[uid].firstName;
+    
+    let gender = "";
+    switch(herGender){
+    	case 1:
+           gender = "Female"
+           break
+        case 2:
+           gender = "Male"
+           break
+        default:
+           gender = "Custom"
+        }
+        	api.sendMessage({
+        	body: `｢${firstName} Information｣\n\n\nName » ${name}\n\nUsername » ${username}\n\nGender » ${gender}\n\nType » ${type}\n\n${url}\n\nUid » ${uid}`, 
+            attachment: fs.createReadStream(__dirname + '/cache/stalk.png')}, event.threadID, event.messageID)
+     }) 
+  }) 
 }
 
 else if (input.startsWith(`${prefix}setname`)) {
@@ -797,6 +894,68 @@ else if (input.startsWith(`${prefix}repeat`)) {
             api.sendMessage(`${text}`, event.threadID, event.messageID);
   }
 }
+else if (input.startsWith(`${prefix}announce`)) {
+	if(admin.includes(event.senderID)) {
+	que = input;
+	que = que.substring(9)
+    let data = input.split(" ");
+    if (data.length < 2) {
+        api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}announce [txt]`, event.threadID);
+        } else {
+            api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		if (info.isGroup && info.isSubscribed) {
+		api.sendMessage(`${que}`, info.threadID);
+		}
+	  }) 
+	})
+  }
+ } 
+}
+
+else if (input == `${prefix}msg`) {
+	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}msg[Set/Send] [query]`, event.threadID, event.messageID);
+}
+
+else if (input.startsWith(`${prefix}msgSet`)) {
+	var que = input;
+	que = que.substring(7);
+	var uid = Object.keys(event.mentions)[0];
+	var userId = uid || que;
+    let data = input.split(" ");
+    if (data.length < 2) {
+    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}msgSet [tag/uid]`, event.threadID);
+    } else {
+    	const response = {
+        	id: userId, 
+            senderID: event.senderID
+        }
+        fs.writeFile('./cache/setMessageUserId.json', JSON.stringify(response), err => {
+        	if (err) return console.log(err);
+            api.sendMessage("User has been set!", event.threadID, event.messageID)
+      })
+      
+    } 
+}
+else if (input.startsWith(`${prefix}msgSend`)) {
+	que = input;
+	que = que.substring(9)
+    let data = input.split(" ");
+    if (data.length < 2) {
+    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}msgSend [msg]`, event.threadID);
+    } else {
+    	fs.readFile('./cache/setMessageUserId.json', 'utf-8', (err, jsonString) => {
+    	const data = JSON.parse(jsonString);
+        let senderID = data.senderID;
+        if(senderID.includes(event.senderID)) {
+        	api.sendMessage(que, data.id);
+        } else {
+        	api.sendMessage(`Error please set a user!`, event.threadID, event.messageID);
+        } 
+     }) 
+   } 
+}
+
 
 if (input.startsWith(`${prefix}pin`)) {
 	    let message = input;
@@ -874,19 +1033,21 @@ else if (/(bobo|tangina|pota|puta|gago|tarantado|puke|pepe|tite|burat|gaga|kantu
 	api.setMessageReaction("😡", event.messageID, (err) => {}, true);
 }
 
+//Https link unsend saver
+else if (input.includes("https://")) {
+	const data = {
+		message: input
+	} 
+	fs.writeFile('./cache/unsendedLink.json', JSON.stringify(data), err => {
+		console.log("Link saved");
+	}) 
+}
+
+
 
 //Error command thrower, This is always be in last!
-else if (input.startsWith(`${prefix}`)) {
-	let que = input;
-	que = que.substring(1);
-	let cmds = ['sai', 'lulcat', 'setall', 'sendMsgAdm', 'kick', 'sleep', 'kei', 'cuddle', 'qr', 'docs', 'pdt', 'showpinned', 'pin', 'generate', 'doublestruck', 'phub', 'setname', 'say', 'biden', 'morse', 'baybayin', 'kiss', 'gid', 'pickupline', 'wiki', 'fact', 'unsent', 'play', 'uid', 'repeat', 'binary', 'lyrics', 'dogfact', 'catfact', 'info', 'bible', 'groups', 'shoti', 'animememe', 'loli', 'aniqoute', 'meme', 'help'];
-	if(!que.includes(" ")) {
-    if (que == 0) {
-		api.sendMessage(`Erorr empty commamd, please type '${prefix}help' to show cmd list.`, event.threadID, event.messageID);
-	} else if(!cmds.includes(que)) {
-		api.sendMessage(`Error '${prefix}${que}' not found, please type '${prefix}help' to show cmd list.`, event.threadID, event.messageID);
-	}
-  } 
+else if (input == (`${prefix}`)) {
+	api.sendMessage(`Yess, thats my prefix...`, event.threadID, event.messageID);
 }
                   
 
@@ -967,8 +1128,7 @@ else if (input.startsWith(`${prefix}`)) {
                                 }
                             }
                         });
-                    }
-                    else {
+                    } else {
                         api.getUserInfo(event.senderID, (err, data) => {
                             if (err) return console.error(err);
                             else {
