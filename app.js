@@ -262,7 +262,7 @@ if(input.startsWith(`${prefix}help`)) {
         msg += `\n\n• ${prefix}pin [txt]\n\n• ${prefix}showpinned []\n\n• ${prefix}pdt [txt]\n\n• ${prefix}docs []\n\n• ${prefix}qr [txt]\n\n• ${prefix}cuddle []\n\n• ${prefix}kei [msg]\n\n• ${prefix}sleep []\n\n• ${prefix}kick [tag]\n\n• ${prefix}sendMsgAdm [msg]\n\n\n• Page » [4/5]`;
         
     } else if (data[1] == 5) {
-        msg += `\n\n• ${prefix}setall [txt]\n\n• ${prefix}lulcat [tag]\n\n• ${prefix}help [num]\n\n• ${prefix}getlink [rep]\n\n• ${prefix}peeposign [txt]\n\n• ${prefix}msg [?]\n\n\n• Page » [5/5]`;
+        msg += `\n\n• ${prefix}setall [txt]\n\n• ${prefix}lulcat [tag]\n\n• ${prefix}help [num]\n\n• ${prefix}getlink [rep]\n\n• ${prefix}peeposign [txt]\n\n• ${prefix}msg [Set/Send]\n\n\n• Page » [5/5]`;
         
     } else {
     	msg += `${defaultPage}`;
@@ -914,7 +914,7 @@ else if (input.startsWith(`${prefix}announce`)) {
 }
 
 else if (input == `${prefix}msg`) {
-	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}msg[Set/Send] [query]`, event.threadID, event.messageID);
+	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}msg[Send/Set] [query]`, event.threadID, event.messageID);
 }
 
 else if (input.startsWith(`${prefix}msgSet`)) {
