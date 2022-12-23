@@ -5,6 +5,7 @@ const login = require("fca-unofficial");
 const axios = require("axios");
 const request = require('request');
 const cron = require('node-cron');
+const moment = require('moment-timezone');
 const { Configuration, OpenAIApi } = require("openai");
 const cd = {};
 const msgs = {};
@@ -12,17 +13,23 @@ const msgs = {};
 //Configuration 
 const config = {
 	PREFIX: "¢",
-	name: "Saiji", 
+	name: "Kei", 
 	admins: [
-	'100084389502600', 
-    '100081144393297'
+	 //Bot id here!
+	'100084536738466',
+	//Admin id here!
+    '100081144393297', 
+    ''
     ], 
-	saijiLoves: [
+	keiLoves: [
 	'100081144393297', 
 	'100027037117607', 
 	'100025001870534', 
 	'100029962340759', 
 	''
+    ],
+    greet: [
+    '100081144393297'
     ], 
 	banned:[
     '',
@@ -32,7 +39,8 @@ const config = {
 
 let prefix = config.PREFIX;
 let admin = config.admins;
-let saijiLoves = config.saijiLoves;
+let keiLoves = config.keiLoves;
+let greet = config.greet;
 let banned = config.banned;
 let botName = config.name;
 async function getWiki(q) {
@@ -44,6 +52,16 @@ async function qt() {
     let qoute = await axios.get("https://zenquotes.io/api/random").then((response) => { return response.data[0] }).catch((err) => { return "err " });
     return qoute
 }
+
+async function qouteOfTheDay() {
+    let qoute = await axios.get("https://zenquotes.io/api/today").then((response) => {
+      return response.data
+    }).catch((err) => {
+      return null
+    });
+    return qoute
+  }
+
 
 async function verse(){
     let v = await axios.get("http://labs.bible.org/api/?passage=random&type=json").then((response) => {
@@ -71,11 +89,22 @@ login({ appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8')) }, (err, 
     if (err) return console.error(err);
     api.setOptions({ listenEvents: true });
 
-cron.schedule('0 7 * * *', () => {
+cron.schedule('0 6 * * *', () => {
 	api.getThreadList(100, null, ["INBOX"], (err, data) => {
 		data.forEach(info => {
 		if (info.isGroup && info.isSubscribed) {
-		api.sendMessage("Good Morning Everyone! I wish you a lovely day.🥀\n\n~Auto Greet~", info.threadID);
+			let a = qouteOfTheDay();
+            a.then((response) => {
+            	if (response == null) {
+            	    console.log("err qouteOfTheDay");
+                } else {
+                	let msg = "Quote of the day:\n\n";
+                    for (let i = 0; i < response.length; i++) {
+                    	msg += `${response[i].q} \n\n- ${response[i].a}`
+                    }
+                   } 
+                  })
+			api.sendMessage(msg, info.threadID);
 		}
 	  }) 
 	})
@@ -83,11 +112,88 @@ cron.schedule('0 7 * * *', () => {
 	schedule: true, 
 	timezone: "Asia/Manila" 
 });
-api.sendMessage("Bot started...", admin[1]);
+
+cron.schedule('0 7 * * *', () => {
+	api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		if (info.isGroup && info.isSubscribed) {
+		api.sendMessage("Good Morning Everyone! Wishing you a day full of fun and pleasure. Have a Wonderful Day!☕\n\n~Auto Greet~", info.threadID);
+		}
+	  }) 
+	})
+},{
+	schedule: true, 
+	timezone: "Asia/Manila" 
+});
+
+cron.schedule('0 12 * * *', () => {
+	api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		if (info.isGroup && info.isSubscribed) {
+		api.sendMessage("Good Afternoon Everyone! I wish you a lovely afternoon and a beautiful day.🥀\n\n~Auto Greet~", info.threadID);
+		}
+	  }) 
+	})
+},{
+	schedule: true, 
+	timezone: "Asia/Manila" 
+});
+
+cron.schedule('0 19 * * *', () => {
+	api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		if (info.isGroup && info.isSubscribed) {
+		api.sendMessage("Good Evening Everyone! I hope you had a good and productive day.🌃\n\n~Auto Greet~", info.threadID);
+		}
+	  }) 
+	})
+},{
+	schedule: true, 
+	timezone: "Asia/Manila" 
+});
+
+cron.schedule('0 22 * * *', () => {
+	api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		if (info.isGroup && info.isSubscribed) {
+		api.sendMessage("Good Night Everyone! May the sheep you count tonight, be fluffy and numerous.🌛\n\n~Auto Greet~", info.threadID);
+		}
+	  }) 
+	})
+},{
+	schedule: true, 
+	timezone: "Asia/Manila" 
+});
+
+cron.schedule('0 11 * * *', () => {
+	api.sendMessage("Helllooo, kumain ka naba?", admin[1]);
+	api.sendMessage("Kain na huyy", greet);
+	api.sendMessage("Eatwell, iloveyou!", greet);
+},{
+	schedule: true, 
+	timezone: "Asia/Manila" 
+});
+
+cron.schedule('0 21 * * *', () => {
+	api.sendMessage("Hi loveee, tutulog nakoo, Iloveyousomuchh🫶🫶", greet);
+},{
+	schedule: true, 
+	timezone: "Asia/Manila" 
+});
+
+cron.schedule('0 16 * * *', () => {
+	api.sendMessage("Hi lolovesss, HAHAHAHAHA", greet);
+},{
+	schedule: true, 
+	timezone: "Asia/Manila" 
+});
+
+moment.tz.setDefault('Asia/Manila');
+const currentDateTime = moment();
+api.sendMessage(`Bot started at ${currentDateTime}`, admin[1]);
 
 const listenEmitter = api.listen(async (err, event) => {
     if (err) return console.error(err);     
-      
         switch (event.type) {
         	case "event":
                 switch (event.logMessageType) {
@@ -106,7 +212,7 @@ const listenEmitter = api.listen(async (err, event) => {
                                 let mess = {
                                     body: `Hello, thanks for adding me in this gc!`,attachment: fs.createReadStream(__dirname + '/join.gif')
                                 }
-                                api.changeNickname(`[${prefix}] ${botName}`, event.threadID, botID, (err) => {
+                                api.changeNickname(`｢${prefix}｣ ${botName}`, event.threadID, botID, (err) => {
                                         if (err) return console.error(err);
                                     });
                                     
@@ -212,7 +318,7 @@ else if(input.startsWith(`${prefix}unsent`)){
                   if (admin.includes(event.senderID)) {
                      api.setMessageReaction("💚", event.messageID, (err) => {}, true);
                   }
-                  else if (saijiLoves.includes(event.senderID)) {
+                  else if (keiLoves.includes(event.senderID)) {
                      api.setMessageReaction("🫶", event.messageID, (err) => {}, true);
                   } else {
                      api.setMessageReaction("", event.messageID, (err) => {}, true);
@@ -246,23 +352,26 @@ if(input.startsWith(`${prefix}help`)) {
 	let data = input.split(`${prefix}help `)
     let rqt = qt();
     rqt.then((response) => {
-    
+    let cmdLength = '6';
     var msg = `｢${botName} Commands｣\n`;
-    var defaultPage = `\n\n• ${prefix}meme []\n\n• ${prefix}aniqoute []\n\n• ${prefix}loli []\n\n• ${prefix}animememe []\n\n• ${prefix}shoti []\n\n• ${prefix}groups []\n\n• ${prefix}bible []\n\n• ${prefix}info []\n\n• ${prefix}catfact []\n\n• ${prefix}dogfact []\n\n\n• Page » [1/5]`;
+    var defaultPage = `\n\n• ${prefix}meme []\n\n• ${prefix}aniqoute []\n\n• ${prefix}loli []\n\n• ${prefix}animememe []\n\n• ${prefix}shoti []\n\n• ${prefix}groups []\n\n• ${prefix}bible []\n\n• ${prefix}info []\n\n• ${prefix}catfact []\n\n• ${prefix}dogfact []\n\n\n• Page » [1/${cmdLength}]`;
     
     if(data[1] == 1) {
     	msg += `${defaultPage}`;
     } else if(data[1] == 2) {
-    	msg += `\n\n• ${prefix}lyrics []\n\n• ${prefix}binary [txt]\n\n• ${prefix}repeat [txt]\n\n• ${prefix}uid [tag]\n\n• ${prefix}play [que]\n\n• ${prefix}unsent [rep]\n\n• ${prefix}fact [txt]\n\n• ${prefix}wiki [que]\n\n• ${prefix}pickupline []\n\n• ${prefix}gid []\n\n\n• Page » [2/5]`;
+    	msg += `\n\n• ${prefix}cbinary [bin]\n\n• ${prefix}binary [txt]\n\n• ${prefix}repeat [txt]\n\n• ${prefix}uid [tag]\n\n• ${prefix}play [que]\n\n• ${prefix}unsent [rep]\n\n• ${prefix}fact [txt]\n\n• ${prefix}wiki [que]\n\n• ${prefix}pickupline []\n\n• ${prefix}gid []\n\n\n• Page » [2/${cmdLength}]`;
     
     } else if (data[1] == 3) {
-        msg += `\n\n• ${prefix}kiss []\n\n• ${prefix}sai [msg]\n\n• ${prefix}baybayin [txt]\n\n• ${prefix}morse [txt]\n\n• ${prefix}biden [txt]\n\n• ${prefix}say [txt]\n\n• ${prefix}setname [tag/txt]\n\n• ${prefix}phub [txt]\n\n• ${prefix}doublestruck [txt]\n\n• ${prefix}generate[que]\n\n\n• Page » [3/5]`;
+        msg += `\n\n• ${prefix}kiss []\n\n• ${prefix}kei [msg]\n\n• ${prefix}baybayin [txt]\n\n• ${prefix}morse [txt]\n\n• ${prefix}biden [txt]\n\n• ${prefix}say [txt]\n\n• ${prefix}setname [tag/txt]\n\n• ${prefix}phub [txt]\n\n• ${prefix}doublestruck [txt]\n\n• ${prefix}generate[que]\n\n\n• Page » [3/${cmdLength}]`;
         
     } else if (data[1] == 4) {
-        msg += `\n\n• ${prefix}pin [txt]\n\n• ${prefix}showpinned []\n\n• ${prefix}pdt [txt]\n\n• ${prefix}docs []\n\n• ${prefix}qr [txt]\n\n• ${prefix}cuddle []\n\n• ${prefix}kei [msg]\n\n• ${prefix}sleep []\n\n• ${prefix}kick [tag]\n\n• ${prefix}sendMsgAdm [msg]\n\n\n• Page » [4/5]`;
+        msg += `\n\n• ${prefix}pin [txt]\n\n• ${prefix}showpinned []\n\n• ${prefix}pdt [txt]\n\n• ${prefix}docs []\n\n• ${prefix}qr [txt]\n\n• ${prefix}cuddle []\n\n• ${prefix}kei [msg]\n\n• ${prefix}sleep []\n\n• ${prefix}kick [tag]\n\n• ${prefix}sendMsgAdm [msg]\n\n\n• Page » [4/${cmdLength}]`;
         
     } else if (data[1] == 5) {
-        msg += `\n\n• ${prefix}setall [txt]\n\n• ${prefix}lulcat [tag]\n\n• ${prefix}help [num]\n\n• ${prefix}getlink [rep]\n\n• ${prefix}peeposign [txt]\n\n• ${prefix}msg [Set/Send]\n\n\n• Page » [5/5]`;
+        msg += `\n\n• ${prefix}setall [txt]~\n\n• ${prefix}lulcat [tag]\n\n• ${prefix}help [num]\n\n• ${prefix}getlink [rep]\n\n• ${prefix}peeposign [txt]\n\n• ${prefix}msgSend [tag/uid] [msg]\n\n• ${prefix}bigtext [txt]\n\n• ${prefix}meow []\n\n• ${prefix}lyrics [msc]\n\n• ${prefix}sendall [msg]~\n\n\n• Page » [5/${cmdLength}]`;
+        
+    } else if (data[1] == 6) {
+        msg += `\n\n• ${prefix}sendallgc [msg]~\n\n• ${prefix}renamebot [msg]~\n\n\n• Page » [5/${cmdLength}]`;
         
     } else {
     	msg += `${defaultPage}`;
@@ -277,7 +386,7 @@ else if (input.startsWith(`${prefix}info`)) {
 	let data = input.split(" ");
     if (data.length < 2) {
     	api.sendMessage({
-    	body: `｢Saiji Info｣\n\nSaiji is a Facebook messenger chat bot made using NodeJS.\n\nCreated by ` + 'Jan Liby Dela Costa' + `\n\n｢Saiji Features｣\n\n» Anti Unsent\n\n» Auto Reaction\n\n» Answer Any Questions\n\n» Solving Math\n\n» Fun\n\n｢Api Used｣\n\n» Fca-unofficialAPI\n\n» SomerandomAPI\n\n» Simsimini.netAPI\n\n» ZenquotesAPI\n\n» OpenAiAPI\n\n» ManhictAPI\n\n» PopcatxyzAPI\n\n» Bible.orgAPI\n\n» Saiki Desu API\n\n» WikipediaAPI\n\n｢Developers that help｣\n\n» Marvin Saik\n\n» Mark Agero\n\n» John Paul Caigas`,
+    	body: `｢${botName} Info｣\n\n${botName} is a Facebook messenger chat bot made using NodeJS.\n\nCreated by ` + 'Jan Liby Dela Costa' + `\n\n｢${botName} Features｣\n\n» Anti Unsent\n\n» Auto Reaction\n\n» Answer Any Questions\n\n» Auto Greet\n\n» Solving Math\n\n» Fun\n\n｢Api Used｣\n\n» Fca-unofficialAPI\n\n» SomerandomAPI\n\n» Simsimini.netAPI\n\n» ZenquotesAPI\n\n» OpenAiAPI\n\n» ManhictAPI\n\n» PopcatxyzAPI\n\n» Bible.orgAPI\n\n» Saiki Desu API\n\n» WikipediaAPI\n\n｢Developers that help｣\n\n» Marvin Saik\n\n» Mark Agero\n\n» John Paul Caigas`,
         mentions: [{
         	tag: 'Jan Liby Dela Costa',
             id: admin[1],
@@ -285,30 +394,18 @@ else if (input.startsWith(`${prefix}info`)) {
         }, event.threadID,event.messageID);
    }
 }                           
- 
-
-
-else if (input.startsWith(`${prefix}test`)){
-	api.getThreadList(100, null, ["INBOX"], (err, data) => {
-		data.forEach(info => {
-		console.log(info.threadID);
-	  })
-	})
-}
-
-
-
-                         
-else if (input.startsWith(`Sai`)) {
+                        
+else if (input.startsWith(`Kei`)) {
 	let data = input.split(" ");
     if (data.length < 2) {
-    if (saijiLoves.includes(event.senderID)) {
+    if (keiLoves.includes(event.senderID)) {
     	api.setMessageReaction("😍", 
 event.messageID, (err) => {}, true);
-        api.sendMessage("Bakit lolovesss??", event.threadID, event.messageID);
+        api.sendMessage("Bakit loveee?", event.threadID, event.messageID);
+        api.sendMessage("Miss mo nnmn ba ako?", event.threadID);
 	} else {
-		api.setMessageReaction("🖕", event.messageID, (err) => {}, true);
-		api.sendMessage("Bakit nnmn?, tanginamo.", event.threadID, event.messageID);
+		api.setMessageReaction("👍", event.messageID, (err) => {}, true);
+		api.sendMessage("Bakit nnmn?", event.threadID, event.messageID);
     }
     } else {
     	let txt = data.join(" ");
@@ -317,8 +414,28 @@ event.messageID, (err) => {}, true);
         	api.sendMessage(`${response.data['success']}`, event.threadID, event.messageID);
   }) 
  } 
+}
+
+else if (input.startsWith(`${prefix}sam`)) {
+	let data = input.split(" ");
+    if (data.length < 2) {
+    if (keiLoves.includes(event.senderID)) {
+    	api.setMessageReaction("😍", 
+event.messageID, (err) => {}, true);
+        api.sendMessage("Bakit loveee?", event.threadID, event.messageID);
+        api.sendMessage("Miss mo nnmn ba ako?", event.threadID);
+	} else {
+		api.setMessageReaction("👍", event.messageID, (err) => {}, true);
+		api.sendMessage("Bakit nnmn?", event.threadID, event.messageID);
+    }
+    } else {
+	    let a = axios.get(`https://api.libyzxy0.repl.co/api/kei/?message=${data[1]}`)
+        a.then(response => {
+        	api.sendMessage(`${response.data.result.message}`, event.threadID, event.messageID);
+  }) 
+ } 
 }                                                                                            
-else if (input.startsWith(`${prefix}sai`)) {
+else if (input.startsWith(`${prefix}kei`)) {
 	const openai = new OpenAIApi(configuration);
     let data = input.split(" ");
     if (data.length < 2) {
@@ -387,20 +504,50 @@ file.on('finish', function () {
  }) 
 }
 
-else if (input.startsWith(`${prefix}play`)) {
-	let que = input.split(" ");
-	let a = axios.get(`https://manhict.tech/api/ytplay?query=${que[1]}&apikey=E8QAKPmf`)
-        a.then(response => {
-		var file = fs.createWriteStream("cache/play.mp3");
-        http.get(response.data.result.audio, function (rqs) {
+else if (input.startsWith(`${prefix}meow`)) {
+	var url = `https://cataas.com/cat`;
+		var file = fs.createWriteStream("cache/meow.png");
+        http.get(url, function (rqs) {
 rqs.pipe(file);
 file.on('finish', function () {
 	api.sendMessage({
-        attachment: fs.createReadStream(__dirname + '/cache/play.mp3')
+        attachment: fs.createReadStream(__dirname + '/cache/meow.png')
     }, event.threadID, event.messageID)
-   }) 
-  })
+   })
  }) 
+}
+
+else if (input.startsWith(`${prefix}play`)) {
+	let data = input.split(" ");
+    if (data.length < 2) {
+    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ?music song_title`, event.threadID, event.messageID);
+    } else {
+    	try {
+    	data.shift()
+        let txt = data.join(" ");
+        api.sendMessage(`🔍Searching for '${txt}'`, event.threadID, event.messageID)
+        let a = axios.get(`https://manhict.tech/api/scSearch?query=${txt}&apikey=E8QAKPmf`);
+        a.then(response => {
+        	if (response.data.result[0] == undefined) {
+        	api.sendMessage("[ ERR ] Music not found!", event.threadID, event.messageID);
+            } else {
+            	var file = fs.createWriteStream("cache/play.mp3");
+                http.get(response.data.result[0]['audio'], function (rqs) {
+                rqs.pipe(file);
+                file.on('finish', function () {
+                    	var message = {
+                          body: `Here's your request!\n\nSong Title » ${response.data.result[0]['title']}\nDuration » ${response.data.result[0]['duration']}\n\nEnjoyy listening!`,
+                          attachment: fs.createReadStream(__dirname + '/cache/play.mp3'),
+                        }
+                        api.sendMessage(message, event.threadID, event.messageID);
+                      })
+                     })
+                    } 
+                    }) 
+              } catch (err) {
+                api.sendMessage(`[ ERR ] ${err}`, event.threadID, event.messageID);
+               }
+  }
 }
 
 else if (input.startsWith(`${prefix}kiss`)) {
@@ -464,21 +611,31 @@ else if (input.startsWith(`${prefix}catfact`)) {
   }) 
  }) 
 }
-
 else if (input.startsWith(`${prefix}meme`)) {
-	let a = axios.get(`https://api-saikidesu-beta.onrender.com/api/fun/meme`)
-        a.then(response => {
-		var file = fs.createWriteStream("cache/meme.png");
-		var rqs = request(encodeURI(`${response.data.result.image}`));
-        rqs.pipe(file);
-        file.on('finish', function () {
-	api.sendMessage({
-		body: `${response.data.result.title}\n\n— ${response.data.result.author}`,
-        attachment: fs.createReadStream(__dirname + '/cache/meme.png')
-    }, event.threadID, event.messageID)
-  }) 
- })
-}
+	axios.get('https://api-saikidesu-beta.onrender.com/api/fun/animememe')
+        .then(response => {
+            console.log(response.data.result)
+            var file = fs.createWriteStream(__dirname + "/cache/memes.png");
+            var targetUrl = response.data.result.image;
+            var title = response.data.result.title;
+            var url = response.data.result.url;
+            var subreddit = response.data.result.subreddit;
+            var gifRequest = http.get(targetUrl, function (gifResponse) {
+                gifResponse.pipe(file);
+                file.on('finish', function () {
+
+                    var message = {
+                        body: "Title: " + title + "\Subreddit: " + subreddit,
+                        attachment: fs.createReadStream(__dirname + `/cache/memes.png`)
+                    }
+                    api.sendMessage(message, event.threadID, event.messageID);
+                });
+            });
+        })
+        .catch(error => {
+            api.sendMessage("Failed to generate Memes!", event.threadID, event.messageID);
+        })
+} 
 
 else if (input.startsWith(`${prefix}fact`)) {
 	let data = input.split(" ");
@@ -603,10 +760,10 @@ file.on('finish', function () {
 }
 
 else if (input.startsWith(`${prefix}shoti`)) {
-	let a = axios.get(`https://libyzxy0-likify-api.libyzxy0.repl.co/api/shoti`)
+	let a = axios.get(`https://api.libyzxy0.repl.co/api/shoti`)
         a.then(response => {
 		var file = fs.createWriteStream("cache/shoti.mp4");
-        http.get(response.data.url, function (rqs) {
+        http.get(response.data.result.url, function (rqs) {
 rqs.pipe(file);
 file.on('finish', function () {
 	api.sendMessage({
@@ -767,7 +924,7 @@ else if (input.startsWith(`${prefix}add`)){
 else if (input.startsWith(`${prefix}uid`)) {
     if (Object.keys(event.mentions) == 0) return api. sendMessage(`${event.senderID}`, event.threadID, event.messageID);
 	else {
-		for (var i = 0; i < Object.keys(event.mentions).length; i++) api.sendMessage(`${Object.values(event.mentions)[i].replace('@', '')}: ${Object.keys(event.mentions)[i]}`, event.threadID);
+		for (var i = 0; i < Object.keys(event.mentions).length; i++) api.sendMessage(`${Object.keys(event.mentions)[i]}`, event.threadID);
 		return;
   }
 }
@@ -792,7 +949,6 @@ else if (input.startsWith(`${prefix}stalk`)) {
     var type = data[uid].type;
     var url = data[uid].profileUrl;
     var firstName = data[uid].firstName;
-    
     let gender = "";
     switch(herGender){
     	case 1:
@@ -833,9 +989,9 @@ else if (input.startsWith(`${prefix}groups`)){
 	})
 }
 
-else if (input.startsWith(`${prefix}sendMsgAdm`)){
+else if (input.startsWith(`${prefix}report`)){
 	let text = input;
-	text = text.substring(11)
+	text = text.substring(6)
 	api.getUserInfo(parseInt(event.senderID), (err, data) => {
      if(err){
          console.log(err)
@@ -883,6 +1039,21 @@ else if (input.startsWith(`${prefix}binary`)){
             api.sendMessage(`${output}`, event.threadID, event.messageID);
         }
 } 
+else if (input.startsWith(`${prefix}cbinary`)){
+    que = input;
+	que = que.substring(7)
+    let data = input.split(" ");
+    if (data.length < 2) {
+        api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}binary [txt]`, event.threadID);
+    } else {
+    	function convert(binary) {
+    	return binary.split(" ").map(function (char) {
+    	return String.fromCharCode(parseInt(char, 2));
+         }).join("");
+        }
+        api.sendMessage(`${convert(que)}`, event.threadID, event.messageID);
+    }
+}
     
 else if (input.startsWith(`${prefix}repeat`)) {
 	text = input;
@@ -894,10 +1065,10 @@ else if (input.startsWith(`${prefix}repeat`)) {
             api.sendMessage(`${text}`, event.threadID, event.messageID);
   }
 }
-else if (input.startsWith(`${prefix}announce`)) {
+else if (input.startsWith(`${prefix}sendallgc`)) {
 	if(admin.includes(event.senderID)) {
 	que = input;
-	que = que.substring(9)
+	que = que.substring(10)
     let data = input.split(" ");
     if (data.length < 2) {
         api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}announce [txt]`, event.threadID);
@@ -913,49 +1084,54 @@ else if (input.startsWith(`${prefix}announce`)) {
  } 
 }
 
-else if (input == `${prefix}msg`) {
-	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}msg[Send/Set] [query]`, event.threadID, event.messageID);
-}
-
-else if (input.startsWith(`${prefix}msgSet`)) {
-	var que = input;
-	que = que.substring(7);
-	var uid = Object.keys(event.mentions)[0];
-	var userId = uid || que;
+else if (input.startsWith(`${prefix}sendall`)) {
+	if(admin.includes(event.senderID)) {
+	que = input;
+	que = que.substring(8)
     let data = input.split(" ");
     if (data.length < 2) {
-    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}msgSet [tag/uid]`, event.threadID);
+        api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}sendall [txt]`, event.threadID);
+        } else {
+            api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		api.sendMessage(`${que}`, info.threadID);
+	  }) 
+	})
+  }
+ } 
+}
+
+else if (input.startsWith(`${prefix}renamebot`)) {
+	if(admin.includes(event.senderID)) {
+	que = input.substring(10)
+	let data = input.split(" ");
+    if (data.length < 2) {
+        api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}sendall [txt]`, event.threadID);
     } else {
-    	const response = {
-        	id: userId, 
-            senderID: event.senderID
-        }
-        fs.writeFile('./cache/setMessageUserId.json', JSON.stringify(response), err => {
-        	if (err) return console.log(err);
-            api.sendMessage("User has been set!", event.threadID, event.messageID)
-      })
-      
+    	api.getThreadList(100, null, ["INBOX"], (err, data) => {
+		data.forEach(info => {
+		if (info.isGroup && info.isSubscribed) {
+		api.changeNickname(`${que}`, info.threadID, admin[0], (err) => {
+			if (err) return console.error(err);
+        })
+	   }
+	  }) 
+	 })
+    } 
+  }
+  api.sendMessage(`Bot successfully rename to ${que}`, event.threadID, event.messageID)
+}
+
+else if (input.startsWith(`${prefix}sendMsg`)) {
+	let data = input.split(">");
+	let uid = data[1];
+    let msg = data[2];
+    if (data.length < 2) {
+    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}sendMsg [uid/tag] [msg]`, event.threadID);
+    } else {
+    	api.sendMessage(msg, uid);
     } 
 }
-else if (input.startsWith(`${prefix}msgSend`)) {
-	que = input;
-	que = que.substring(9)
-    let data = input.split(" ");
-    if (data.length < 2) {
-    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}msgSend [msg]`, event.threadID);
-    } else {
-    	fs.readFile('./cache/setMessageUserId.json', 'utf-8', (err, jsonString) => {
-    	const data = JSON.parse(jsonString);
-        let senderID = data.senderID;
-        if(senderID.includes(event.senderID)) {
-        	api.sendMessage(que, data.id);
-        } else {
-        	api.sendMessage(`Error please set a user!`, event.threadID, event.messageID);
-        } 
-     }) 
-   } 
-}
-
 
 if (input.startsWith(`${prefix}pin`)) {
 	    let message = input;
@@ -1022,6 +1198,217 @@ else if (input.startsWith(`${prefix}wiki`)) {
   }
  }
 }
+
+else if (input.startsWith(`${prefix}bigtext`)) {
+	let text = input;
+	text = text.substring(8)
+	text = text.toLowerCase()
+  text = text.replace(/\./g, `
+░░░
+░░░
+░░░
+░░░
+██╗
+╚═╝`)
+  .replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ|a/g, `
+░█████╗░
+██╔══██╗
+███████║
+██╔══██║
+██║░░██║
+╚═╝░░╚═╝`)
+  .replace(/b/g, `
+██████╗░
+██╔══██╗
+██████╦╝
+██╔══██╗
+██████╦╝
+╚═════╝░`)
+  .replace(/c/g, `
+░█████╗░
+██╔══██╗
+██║░░╚═╝
+██║░░██╗
+╚█████╔╝
+░╚════╝░`)
+  .replace(/d|đ/g, `
+██████╗░
+██╔══██╗
+██║░░██║
+██║░░██║
+██████╔╝
+╚═════╝░`)
+  .replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ|e/g, `
+███████╗
+██╔════╝
+█████╗░░
+██╔══╝░░
+███████╗
+╚══════╝`)
+  .replace(/f/g, `
+███████╗
+██╔════╝
+█████╗░░
+██╔══╝░░
+██║░░░░░
+╚═╝░░░░░`)
+  .replace(/g/g, `
+░██████╗░
+██╔════╝░
+██║░░██╗░
+██║░░╚██╗
+╚██████╔╝
+░╚═════╝░`)
+  .replace(/h/g, `
+██╗░░██╗
+██║░░██║
+███████║
+██╔══██║
+██║░░██║
+╚═╝░░╚═╝`)
+  .replace(/i/g, `
+██╗
+██║
+██║
+██║
+██║
+╚═╝`)
+  .replace(/ì|í|ị|ỉ|ĩ|i/g, `
+░░░░░██╗
+░░░░░██║
+░░░░░██║
+██╗░░██║
+╚█████╔╝
+░╚════╝░`)
+  .replace(/k/g, `
+██╗░░██╗
+██║░██╔╝
+█████═╝░
+██╔═██╗░
+██║░╚██╗
+╚═╝░░╚═╝`)
+  .replace(/l/g, `
+██╗░░░░░
+██║░░░░░
+██║░░░░░
+██║░░░░░
+███████╗
+╚══════╝`)
+  .replace(/m/g, `
+███╗░░░███╗
+████╗░████║
+██╔████╔██║
+██║╚██╔╝██║
+██║░╚═╝░██║
+╚═╝░░░░░╚═╝`)
+  .replace(/n/g, `
+███╗░░██╗
+████╗░██║
+██╔██╗██║
+██║╚████║
+██║░╚███║
+╚═╝░░╚══╝`)
+  .replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ|o/g, `
+░█████╗░
+██╔══██╗
+██║░░██║
+██║░░██║
+╚█████╔╝
+░╚════╝░`)
+  .replace(/p/g, `
+██████╗░
+██╔══██╗
+██████╔╝
+██╔═══╝░
+██║░░░░░
+╚═╝░░░░░`)
+  .replace(/q/g, `
+░██████╗░
+██╔═══██╗
+██║██╗██║
+╚██████╔╝
+░╚═██╔═╝░
+░░░╚═╝░░░`)
+  .replace(/r/g, `
+██████╗░
+██╔══██╗
+██████╔╝
+██╔══██╗
+██║░░██║
+╚═╝░░╚═╝`)
+  .replace(/s/g, `
+░██████╗
+██╔════╝
+╚█████╗░
+░╚═══██╗
+██████╔╝
+╚═════╝░`)
+  .replace(/t/g, `
+████████╗
+╚══██╔══╝
+░░░██║░░░
+░░░██║░░░
+░░░██║░░░
+░░░╚═╝░░░`)
+  .replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ|u/g, `
+██╗░░░██╗
+██║░░░██║
+██║░░░██║
+██║░░░██║
+╚██████╔╝
+░╚═════╝░`)
+  .replace(/v/g, `
+██╗░░░██╗
+██║░░░██║
+╚██╗░██╔╝
+░╚████╔╝░
+░░╚██╔╝░░
+░░░╚═╝░░░`)
+  .replace(/x/g, `
+██╗░░██╗
+╚██╗██╔╝
+░╚███╔╝░
+░██╔██╗░
+██╔╝╚██╗
+╚═╝░░╚═╝` )
+  .replace(/ỳ|ý|ỵ|ỷ|ỹ|y/g, `
+██╗░░░██╗
+╚██╗░██╔╝
+░╚████╔╝░
+░░╚██╔╝░░
+░░░██║░░░
+░░░╚═╝░░░`)
+  .replace(/w/g, `
+░██╗░░░░░░░██╗
+░██║░░██╗░░██║
+░╚██╗████╗██╔╝
+░░████╔═████║░
+░░╚██╔╝░╚██╔╝░
+░░░╚═╝░░░╚═╝░░`)
+  .replace(/z/g, `
+███████╗
+╚════██║
+░░███╔═╝
+██╔══╝░░
+███████╗
+╚══════╝`)
+  .replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, "");
+  var arr = text.replace("\n", "").split("\n").filter(item => item.length != 0);
+  var num = (arr.length/6)-1;
+  var main = arr.slice(0,6);
+  var extra = arr.splice(6);
+  var msg = "";
+  var mainlength = main.length;
+  for(let i = 0; i < mainlength; i++) {
+    var txt = main[i];
+    for(let o = 0; o < num; o++) {
+      txt += extra[i+(o*6)];
+    }
+    msg += txt+"\n";
+  }
+  api.sendMessage(msg, event.threadID, event.messageID);
+}
+
                    
 else if (/(haha|😆|🤣|😂|😀|😃|😄)/ig.test(input.toLowerCase())) {
 	api.setMessageReaction("😆", event.messageID, (err) => {}, true);
@@ -1032,17 +1419,6 @@ else if (/(sad|iyak|pain|sakit|agoi|hurt|😢|☹️|😭|😞|🙁)/ig.test(inp
 else if (/(bobo|tangina|pota|puta|gago|tarantado|puke|pepe|tite|burat|gaga|kantutan)/ig.test(input.toLowerCase())) {
 	api.setMessageReaction("😡", event.messageID, (err) => {}, true);
 }
-
-//Https link unsend saver
-else if (input.includes("https://")) {
-	const data = {
-		message: input
-	} 
-	fs.writeFile('./cache/unsendedLink.json', JSON.stringify(data), err => {
-		console.log("Link saved");
-	}) 
-}
-
 
 
 //Error command thrower, This is always be in last!
@@ -1061,92 +1437,117 @@ else if (input == (`${prefix}`)) {
                         api.getUserInfo(event.senderID, (err, data) => {
                             if (err) return console.error(err);
                             else {
-                                if (d[0] == "img") {
-                                    var file = fs.createWriteStream("cache/unsentphoto.jpg");
-                                    var gifRequest = http.get(d[1], function (gifResponse) {
-                                        gifResponse.pipe(file);
-                                        file.on('finish', function () {
-                                            var message = {
-                                                body:`${data[event.senderID]['name']} unsent this photo: \n`,
-                                                attachment: fs.createReadStream(__dirname + '/cache/unsentphoto.jpg')
-                                            }
-                                            api.sendMessage(message, admin);
-                                        });
-                                    });
-                                }
-                                else if (d[0] == "gif") {
-                                    var file = fs.createWriteStream("cache/unsentanimated_image.gif");
-                                    var gifRequest = http.get(d[1], function (gifResponse) {
-                                        gifResponse.pipe(file);
-                                        file.on('finish', function () {
-                                            var message = {
-                                                body:`${data[event.senderID]['name']} unsent this GIF \n`,
-                                                attachment: fs.createReadStream(__dirname + '/cache/unsentanimated_image.gif')
-                                            }
-                                            api.sendMessage(message, admin);
-                                        });
-                                    });
-                                }
-                                else if (d[0] == "sticker") {
-                                    var file = fs.createWriteStream("cache/unsentsticker.png");
-                                    var gifRequest = http.get(d[1], function (gifResponse) {
-                                        gifResponse.pipe(file);
-                                        file.on('finish', function () {
-                                            var message = {
-                                                body:`${data[event.senderID]['name']} unsent this Sticker \n`,
-                                                attachment: fs.createReadStream(__dirname + '/cache/unsentsticker.png')
-                                            }
-                                            api.sendMessage(message, admin);
-                                        });
-                                    });
-                                }
-                                else if (d[0] == "vid") {
-                                    var file = fs.createWriteStream("cache/unsentvideo.mp4");
-                                    var gifRequest = http.get(d[1], function (gifResponse) {
-                                        gifResponse.pipe(file);
-                                        file.on('finish', function () {
-                                            var message = {
-                                                body:`${data[event.senderID]['name']} unsent this video\n`,
-                                                attachment: fs.createReadStream(__dirname + '/cache/unsentvideo.mp4')
-                                            }
-                                            api.sendMessage(message, admin);
-                                        });
-                                    });
-                                }
-                                else if (d[0] == "vm") {
-                                    var file = fs.createWriteStream("cache/unsentvoicemessage.mp3");
-                                    var gifRequest = http.get(d[1], function (gifResponse) {
-                                        gifResponse.pipe(file);
-                                        file.on('finish', function () {
-                                            var message = {
-                                                body:`${data[event.senderID]['name']} unsent this audio\n`,
-                                                attachment: fs.createReadStream(__dirname + '/cache/unsentvoicemessage.mp3'),
-                                            }
-                                            api.sendMessage(message, admin);
-                                        });
-                                    });
-                                }
-                            }
-                        });
-                    } else {
-                        api.getUserInfo(event.senderID, (err, data) => {
-                            if (err) return console.error(err);
-                            else {
-                                api.sendMessage({
-                                body: "@" + data[event.senderID]['name'] + ` unsent this message😐:\n\n'${msgs[event.messageID]}'`,
-                                mentions: [{
-                                    tag: '@' + data[event.senderID]['name'],
-                                    id: event.senderID,
-                                    fromIndex: 0
-                                }],
-                            }, event.threadID, event.messageID);
-                            }
-                        });
-                        
-                    }
+if (d[0] == "img") {
+	var file = fs.createWriteStream("cache/unsentphoto.jpg");
+    http.get(d[1], function (rqs) {
+    	rqs.pipe(file);
+        file.on('finish', function () {
+        	var message = {
+        	body: data[event.senderID]['name'] + ` unsent this photo: \n`,
+            attachment: fs.createReadStream(__dirname + '/cache/unsentphoto.jpg'), 
+            mentions: [{
+            	tag: data[event.senderID]['name'],
+                id: event.senderID,
+                fromIndex: 0
+            }]
+            }
+    api.sendMessage(message, admin);
+  })
+ })
+}
+else if (d[0] == "gif") {
+	var file = fs.createWriteStream("cache/unsentanimated_image.gif");
+	http.get(d[1], function (rqs) {
+		rqs.pipe(file);
+		file.on('finish', function () {
+			var message = {
+		    body: data[event.senderID]['name'] + ` unsent this GIF \n`,
+            attachment: fs.createReadStream(__dirname + '/cache/unsentanimated_image.gif'), 
+            mentions: [{
+            	tag: data[event.senderID]['name'],
+                id: event.senderID,
+                fromIndex: 0
+            }]
+            } 
+    api.sendMessage(message, admin);
+  })
+ })
+}
+else if (d[0] == "sticker") {
+	var file = fs.createWriteStream("cache/unsentsticker.png");
+	http.get(d[1], function (rqs) {
+		rqs.pipe(file);
+        file.on('finish', function () {
+        	var message = {
+        	body: data[event.senderID]['name'] + ` unsent this Sticker \n`,
+            attachment: fs.createReadStream(__dirname + '/cache/unsentsticker.png'), 
+            mentions: [{
+            	tag: data[event.senderID]['name'],
+                id: event.senderID,
+                fromIndex: 0
+            }]
+            }
+        api.sendMessage(message, admin);
+   })
+ })
+}
+else if (d[0] == "vid") {
+	var file = fs.createWriteStream("cache/unsentvideo.mp4");
+	http.get(d[1], function (rqs) {
+		rqs.pipe(file);
+		file.on('finish', function () {
+			var message = {
+		    body: data[event.senderID]['name'] + ` unsent this video\n`,
+            attachment: fs.createReadStream(__dirname + '/cache/unsentvideo.mp4'), 
+            mentions: [{
+            	tag: data[event.senderID]['name'],
+                id: event.senderID,
+                fromIndex: 0
+            }]
+            }
+        api.sendMessage(message, admin);
+  })
+ })
+}
+else if (d[0] == "vm") {
+	var file = fs.createWriteStream("cache/unsentvoicemessage.mp3");
+	http.get(d[1], function (rqs) {
+		rqs.pipe(file);
+		file.on('finish', function () {
+			var message = {
+			body: data[event.senderID]['name'] + ` unsent this audio\n`,
+            attachment: fs.createReadStream(__dirname + '/cache/unsentvoicemessage.mp3'),
+            mentions: [{
+            	tag: data[event.senderID]['name'],
+                id: event.senderID,
+                fromIndex: 0
+            }]
+            }
+        api.sendMessage(message, admin);
+   })
+ })
+}
+ }
+})
+} else {
+	api.getUserInfo(event.senderID, (err, data) => {
+		if (err) return console.error(err);
+        else {
+        	api.sendMessage({
+        	body: "@" + data[event.senderID]['name'] + ` unsent this message😐:\n\n'${msgs[event.messageID]}'`,
+            mentions: [{
+            	tag: '@' + data[event.senderID]['name'],
+                id: event.senderID,
+                fromIndex: 0
+                }]
+            }, event.threadID, event.messageID);
+  }
+ })
+}
                     break;
                     
-              }
+              
+          }
         }
     });
 });
