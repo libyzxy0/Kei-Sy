@@ -177,7 +177,7 @@ function getThread(){
 
 moment.tz.setDefault('Asia/Manila');
 const currentDateTime = moment();
-api.sendMessage(`${botName} js started at ${currentDateTime}`, admin[1]);
+api.sendMessage(`${botName} started at ${currentDateTime}`, admin[1]);
 
 
 const listenEmitter = api.listen(async (err, event) => {

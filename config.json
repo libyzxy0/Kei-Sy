@@ -1,0 +1,25 @@
+{
+  "prefix": "¢", 
+  "botName": "Kei", 
+  "emojiReaction": "", 
+  "isActive": true, 
+  "greetings": false, 
+  "antiUnsent": true,
+  "antiOut": true, 
+  "welcomeOnGC": true,
+  "autoReactions": true, 
+  "admin": [
+    "100084536738466", 
+    "100081144393297"
+  ], 
+  "loves": [
+    "100081144393297", 
+    "100027037117607", 
+    "100025001870534", 
+    "100029962340759"
+  ], 
+  "greet": [
+    "100081144393297"
+  ], 
+  "banned": []
+}
