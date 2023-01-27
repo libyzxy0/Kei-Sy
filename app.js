@@ -11,6 +11,7 @@ const cd = {};
 const msgs = {};
 const config = require('./config.json'); 
 const { prefix, admin, loves, greet, banned, botName } = config;
+const openaiPrefix = botName.toLowerCase();
 
 async function getWiki(q) {
   out = await axios.get("https://en.wikipedia.org/api/rest_v1/page/summary/" + q).then((response) => { return response.data}).catch((error) => { return error })
@@ -137,41 +138,6 @@ cron.schedule('0 16 * * *', () => {
 
 } 
 
-
-
-function getThread(){
-        let taggs = ["OTHER", "unread"];
-        let tagg = ["PENDING", "unread"];
-        api.getThreadList(1, null, taggs, (err, list) => {
-            if (err) return console.error("err");
-            if (list.length != 0) {
-                try {
-                    api.handleMessageRequest(list[0]['threadID'], true, (err) => {
-                        if (err) return console.log("err");
-                        api.sendMessage(`Hi`, list[0]['threadID']);
-                    });
-                } catch(err) {
-
-                }
-            }
-        });
-        api.getThreadList(1, null, tagg, (err, list) => {
-            if (err) return console.error("err");
-            if (list.length != 0) {
-                try {
-                    api.handleMessageRequest(list[0]['threadID'], true, (err) => {
-                        if (err) return console.log("err");
-                        api.sendMessage("Hi", list[0]['threadID']);
-                    });
-                } catch(err) {
-
-                }
-            }
-        }); 
-    }
-    var x = setInterval(getThread, 90000);
-
-
 } 
 
 
@@ -209,16 +175,27 @@ const listenEmitter = api.listen(async (err, event) => {
                                     
                                 api.sendMessage(mess, event.threadID);
                                } else {
+                               	
+                               var url = `https://api.reikomods.repl.co/canvas/welcome?uid=${id}&name=${event.logMessageData.addedParticipants[0].fullName}&bg=https://liby0.vercel.app/cache/download%20(2).jpeg&namegc=${gcName}&member=${members}`;
+		var file = fs.createWriteStream("cache/join.png");
+        http.get(url, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
+	
+                               
                                	let mess = {
                                     body: `Hi there, ${event.logMessageData.addedParticipants[0].fullName} 😊\n┌────── ～●～ ──────┐\n─── Welcome to ${gcName} ───\n└────── ～●～ ──────┘\nYour'e the ${members}th member of this gc!`,
                                     mentions: [{
                                         tag: event.logMessageData.addedParticipants[0].fullName,
                                         id: id
                                     }],
-                                    attachment: fs.createReadStream(__dirname + '/join.gif')
+                                    attachment: fs.createReadStream(__dirname + '/cache/join.png')
                                 }
                                 
                                 api.sendMessage(mess, event.threadID);
+                                
+                                })
+  }) 
                                } 
                                
                             }
@@ -235,8 +212,15 @@ const listenEmitter = api.listen(async (err, event) => {
                                     } else {
                                         for (var prop in data) {
                                             if (data.hasOwnProperty(prop) && data[prop].name) {
-var gcName = gc.threadName;                                            
+var gcName = gc.threadName;                                             var userIDs = gc.participantIDs;
+var members = userIDs.length;
+                            
 if(config.welcomeOnGC) {
+var url = `https://api.reikomods.repl.co/canvas/goodbye2?name=${data[prop].firstName}&uid=${id}&bg=https://liby0.vercel.app/cache/download%20(2).jpeg&member=${members}`;
+		var file = fs.createWriteStream("cache/leave.png");
+        http.get(url, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
 	
 api.sendMessage({
     body: `‎Bye😞, ${data[prop].name} has left from the group '${gcName}', we will miss you!`,
@@ -244,27 +228,25 @@ api.sendMessage({
     tag: data[prop].name,
     id: id,
 }],
-attachment: fs.createReadStream(__dirname + '/bye.gif')
+attachment: fs.createReadStream(__dirname + '/cache/leave.png')
                                                 }, event.threadID)
-
+	
+   })
+  }) 
 } 
 
 if(config.antiOut) {                                               
-setTimeout(function() {
+setTimeout(() => {
 	api.addUserToGroup(id, event.threadID, (err,data) => {
-	if (err) {
-        api.sendMessage("[Antiout] » Can't add user to the group!", event.threadID);
-    } else {
+	if (err) return api.sendMessage("[Antiout] » Err, cant add user to the group!");
+    })
 api.sendMessage({
     body: `[Antiout] » ` + data[prop].name + ` has been re-added to the group ${gcName}!`,
     mentions: [{
     	tag: data[prop].name,
         id: id
     }]
-}, event.threadID)
-
-} 
-}) 
+}, event.threadID);
 }, 5000);
 }                                            
                                             }
@@ -350,14 +332,14 @@ else if(input.startsWith(`${prefix}unsent`)){
                   if (admin.includes(event.senderID)) {
                   	if(config.isActive) {
                   	if(config.autoReactions) {
-                     api.setMessageReaction("💙", event.messageID, (err) => {}, true);
+                     api.setMessageReaction("🩷", event.messageID, (err) => {}, true);
                     } 
                    } 
                   }
                   else if (loves.includes(event.senderID)) {
                   	if(config.isActive) {
                   	if(config.autoReactions) {
-                     api.setMessageReaction("💜", event.messageID, (err) => {}, true);
+                     api.setMessageReaction("🩷", event.messageID, (err) => {}, true);
                     } 
                    }
                   } else {
@@ -426,7 +408,7 @@ if(input.startsWith(`${prefix}help`)) {
     	msg += `\n\n• ${prefix}cbinary [bin]\n\n• ${prefix}binary [txt]\n\n• ${prefix}repeat [txt]\n\n• ${prefix}uid [tag]\n\n• ${prefix}play [×]\n\n• ${prefix}unsent [rep]\n\n• ${prefix}fact [txt]\n\n• ${prefix}wiki [txt]\n\n• ${prefix}code [txt]\n\n• ${prefix}gid [nqr]\n\n\n• Page » [2/${cmdLength}]`;
     
     } else if (data[1] == 3) {
-        msg += `\n\n• ${prefix}kiss [nqr]\n\n• ${prefix}kei [ask]\n\n• ${prefix}baybayin [txt]\n\n• ${prefix}morse [txt]\n\n• ${prefix}biden [txt]\n\n• ${prefix}say [txt]\n\n• ${prefix}setname [tag] [txt] \n\n• ${prefix}phub [txt]\n\n• ${prefix}doublestruck [txt]\n\n• ${prefix}generate[txt]\n\n\n• Page » [3/${cmdLength}]`;
+        msg += `\n\n• ${prefix}kiss [nqr]\n\n• ${prefix}${openaiPrefix} [ask]\n\n• ${prefix}baybayin [txt]\n\n• ${prefix}morse [txt]\n\n• ${prefix}biden [txt]\n\n• ${prefix}say [txt]\n\n• ${prefix}setname [tag] [txt] \n\n• ${prefix}phub [txt]\n\n• ${prefix}doublestruck [txt]\n\n• ${prefix}generate[txt]\n\n\n• Page » [3/${cmdLength}]`;
         
     } else if (data[1] == 4) {
         msg += `\n\n• ${prefix}pin [rep]\n\n• ${prefix}showpinned [nqr]\n\n• ${prefix}periodic [txt]\n\n• ${prefix}signs [nqr]\n\n• ${prefix}qr [txt]\n\n• ${prefix}cuddle [nqr]\n\n• ${prefix}gelbooru [nqr]\n\n• ${prefix}meow [nqr]\n\n• ${prefix}kick [tag]\n\n• ${prefix}report [msg]\n\n\n• Page » [4/${cmdLength}]`;
@@ -435,7 +417,7 @@ if(input.startsWith(`${prefix}help`)) {
         msg += `\n\n• ${prefix}setall [txt]~\n\n• ${prefix}lulcat [txt]\n\n• ${prefix}help [num]\n\n• ${prefix}getlink [rep]\n\n• ${prefix}peeposign [txt]\n\n• ${prefix}send|[uid]|[msg]\n\n• ${prefix}bigtext [txt]\n\n• ${prefix}essay [txt]\n\n• ${prefix}lyrics [txt]\n\n• ${prefix}sendall [msg]~\n\n\n• Page » [5/${cmdLength}]`;
         
     } else if (data[1] == 6) {
-        msg += `\n\n• ${prefix}sendallgc [msg]~\n\n• ${prefix}renamebot [msg]~\n\n\n• Page » [6/${cmdLength}]`;
+        msg += `\n\n• ${prefix}pet [txt]\n\n• ${prefix}sendallgc [txt]~\n\n• ${prefix}renamebot [txt]~\n\n\n• Page » [6/${cmdLength}]`;
         
     } else {
     	msg += `${defaultPage}`;
@@ -445,6 +427,13 @@ if(input.startsWith(`${prefix}help`)) {
    api.sendMessage(msg, event.threadID, event.messageID)
     }) 
 }  
+
+//=======Special Features Here!=======\\
+
+
+
+//=======End Special Features Here!=======\\
+
 
 
 
@@ -487,11 +476,11 @@ event.messageID, (err) => {}, true);
   }) 
  } 
 }                                                                               
-else if (input.startsWith(`${prefix}kei`)) {
+else if (input.startsWith(`${prefix}${openaiPrefix}`)) {
 	const openai = new OpenAIApi(configuration);
     let data = input.split(" ");
     if (data.length < 2) {
-    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}kei [ask]`, event.threadID);
+    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}${openaiPrefix} [ask]`, event.threadID);
     } else {
     	try {
     	data.shift()
@@ -583,6 +572,42 @@ file.on('finish', function () {
     }, event.threadID, event.messageID)
    })
  }) 
+}
+
+else if (input.startsWith(`${prefix}pet`)) {
+	let uid = Object.keys(event.mentions)[0];
+	if (Object.keys(event.mentions) == 0) return api. sendMessage(`Error, please tag someone!`, event.threadID, event.messageID);
+	else {
+	let fbImage = `https://api.libyzxy0.repl.co/api/fbImage/?uid=${uid}`;
+	var url = `https://api.popcat.xyz/pet?image=${fbImage}`;
+		var file = fs.createWriteStream("cache/pet.png");
+        http.get(url, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
+	api.sendMessage({
+        attachment: fs.createReadStream(__dirname + '/cache/pet.png')
+    }, event.threadID, event.messageID)
+   })
+  }) 
+ } 
+}
+
+else if (input.startsWith(`${prefix}heaven`)) {
+	let uid = Object.keys(event.mentions)[0];
+	if (Object.keys(event.mentions) == 0) return api. sendMessage(`Error, please tag someone!`, event.threadID, event.messageID);
+	else {
+	let fbImage = `https://api.libyzxy0.repl.co/api/fbImage/?uid=${uid}`;
+	var url = `https://vacefron.nl/api/heaven?user=${fbImage}`;
+		var file = fs.createWriteStream("cache/heaven.png");
+        http.get(url, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
+	api.sendMessage({
+        attachment: fs.createReadStream(__dirname + '/cache/heaven.png')
+    }, event.threadID, event.messageID)
+   })
+  }) 
+ } 
 }
 
 else if (input.startsWith(`${prefix}kiss`)) {
@@ -1116,12 +1141,12 @@ else if (input.startsWith(`${prefix}cbinary`)){
     
 else if (input.startsWith(`${prefix}repeat`)) {
 	text = input;
-	text = text.substring(7)
+	text = text.substring(8)
     let data = input.split(" ");
     if (data.length < 2) {
         api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}repeat [txt]`, event.threadID);
         } else {
-            api.sendMessage(`${text}`, event.threadID, event.messageID);
+            api.sendMessage(`${text}`, event.threadID);
   }
 }
 else if (input.startsWith(`${prefix}sendallgc`)) {
@@ -1162,7 +1187,7 @@ else if (input.startsWith(`${prefix}sendall`)) {
 
 else if (input.startsWith(`${prefix}renamebot`)) {
 	if(admin.includes(event.senderID)) {
-	que = input.substring(10)
+	que = input.substring(11)
 	let data = input.split(" ");
     if (data.length < 2) {
         api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}sendall [txt]`, event.threadID);
@@ -1182,11 +1207,11 @@ else if (input.startsWith(`${prefix}renamebot`)) {
 }
 
 else if (input.startsWith(`${prefix}send`)) {
-	let data = input.split("|");
+	let data = input.split("_");
 	let uid = data[1];
     let msg = data[2];
     if (data.length < 2) {
-    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}sendMsg [uid/tag] [msg]`, event.threadID);
+    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}send [uid]_[msg]`, event.threadID);
     } else {
     	api.sendMessage(msg, uid);
     } 
@@ -1466,7 +1491,8 @@ else if (input == (`${prefix}`)) {
         }, event.threadID, event.messageID);
         } 
     }) 
-}      
+}
+ 
 else if (/(haha|😆|🤣|😂|😀|😃|😄)/ig.test(input.toLowerCase())) {
 	
 	if(config.autoReactions) {
@@ -1478,7 +1504,12 @@ else if (/(sad|iyak|pain|sakit|agoi|hurt|😢|☹️|😭|😞|🙁)/ig.test(inp
 	api.setMessageReaction("😢", event.messageID, (err) => {}, true);
 	} 
 }
-else if (/(bobo|tangina|pota|puta|gago|tarantado|puke|pepe|tite|burat|kantutan|bubu|bubo|bobu|boobs|nipples|pussy)/ig.test(input.toLowerCase())) {
+else if (/(salamat|thank you|tanks|thankyou|love|mwah)/ig.test(input.toLowerCase())) {
+	if(config.autoReactions) {
+	api.setMessageReaction("💙", event.messageID, (err) => {}, true);
+	} 
+}
+else if (/(bobo|tangina|pota|puta|gago|tarantado|puke|pepe|tite|burat|kantutan|iyot|dede|bubu|bubo|bobu|boobs|nipples|pussy)/ig.test(input.toLowerCase())) {
 	if(config.autoReactions) {
 	api.setMessageReaction("😡", event.messageID, (err) => {}, true);
 	} 
@@ -1488,16 +1519,16 @@ else if (/(bobo|tangina|pota|puta|gago|tarantado|puke|pepe|tite|burat|kantutan|b
    
   }
 }
-          break;
+          break; //na tayo!
             case "message_unsend":
             if(config.isActive) {
             if(config.antiUnsent) {
             if (!admin.includes(event.senderID)) {
-                    let d = msgs[event.messageID];
-                    if (typeof (d) == "object") {
-                        api.getUserInfo(event.senderID, (err, data) => {
-                            if (err) return console.error(err);
-                            else {
+            	let d = msgs[event.messageID];
+                if (typeof (d) == "object") {
+                	api.getUserInfo(event.senderID, (err, data) => {
+                	if (err) return console.error(err);
+                else {
 if (d[0] == "img") {
 	var file = fs.createWriteStream("cache/unsentphoto.jpg");
     http.get(d[1], function (rqs) {
@@ -1606,12 +1637,10 @@ else if (d[0] == "vm") {
  })
 }
 
-} 
-          }
+          } 
+         }
                     break;
-                    
-             
-        }
-       } 
-    });
+     }
+    } 
+  })
 });
