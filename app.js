@@ -12,6 +12,17 @@ const msgs = {};
 const config = require('./config.json'); 
 const { prefix, admin, loves, greet, banned, botName } = config;
 const openaiPrefix = botName.toLowerCase();
+/*=======Note=======
+
+Primary admin must be put in the admin[1] index!
+Bot id must be put in admin[0] index!
+Normal admins put from admin[2] and so far so on!
+
+Thankyou for using my code!
+— libyzxy0
+
+https://liby0.vercel.app
+*/
 
 async function getWiki(q) {
   out = await axios.get("https://en.wikipedia.org/api/rest_v1/page/summary/" + q).then((response) => { return response.data}).catch((error) => { return error })
@@ -24,7 +35,7 @@ async function qt() {
 }
 
 async function qouteOfTheDay() {
-    let qoute = await axios.get("https://zenquotes.io/api/today").then((response) => {
+    let qoute = await axios.get("https://api.libyzxy0.repl.co/api/qoutes/today").then((response) => {
       return response.data
     }).catch((err) => {
       return null
@@ -42,7 +53,7 @@ async function verse(){
     return v
 }
 const configuration = new Configuration({
-  apiKey: process.env.OPEN_AI_KEY="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",
+  apiKey: process.env.OPEN_AI_KEY=config.api_keys.openai,
 });
 
 async function aiImage(prompt_msg){
@@ -67,7 +78,12 @@ cron.schedule('0 6 * * *', () => {
 		if (info.isGroup && info.isSubscribed) {
 			let a = qouteOfTheDay();
             a.then((response) => {
-            	 api.sendMessage(`｢Quote of the day｣\n\n${response[0].q}\n\n— ${response[0].a}`, info.threadID);
+            if(response.code == 200) {
+            	api.sendMessage(`｢Quote of the day｣\n\n${response.result.quote}\n\n— ${response.result.author}`, info.threadID);
+            } else {
+            	api.sendMessage("Quote of the day has been error!", admin[1]);
+            }
+            	 
             })
 		}
 	  }) 
@@ -129,17 +145,15 @@ cron.schedule('0 22 * * *', () => {
 	timezone: "Asia/Manila" 
 });
 
-cron.schedule('0 16 * * *', () => {
-	api.sendMessage("Pakiss, HAHAHAHAHAHA", greet);
+cron.schedule('0 23 * * *', () => {
+	api.sendMessage("Loveuu", greet);
 },{
 	schedule: true, 
 	timezone: "Asia/Manila" 
 });
 
+}
 } 
-
-} 
-
 
 moment.tz.setDefault('Asia/Manila');
 const currentDateTime = moment();
@@ -148,8 +162,6 @@ api.sendMessage(`${botName} started at ${currentDateTime}`, admin[1]);
 
 const listenEmitter = api.listen(async (err, event) => {
     if (err) return console.log(err);     
-    
-    
         switch (event.type) {
         	case "event":
         if(config.isActive) {
@@ -163,65 +175,73 @@ const listenEmitter = api.listen(async (err, event) => {
                             let botID = api.getCurrentUserID();
                             var userIDs = data.participantIDs;
                             var members = userIDs.length;
-                            
-                            if (data.isGroup) {
-                            	if (id == botID) {
-                                let mess = {
-                                    body: `Hello, thanks for adding me in this gc!`,attachment: fs.createReadStream(__dirname + '/join.gif')
-                                }
-                                api.changeNickname(`｢${prefix}｣ ${botName}`, event.threadID, botID, (err) => {
-                                        if (err) return console.error(err);
-                                    });
-                                    
-                                api.sendMessage(mess, event.threadID);
-                               } else {
-                               	
-                               var url = `https://api.reikomods.repl.co/canvas/welcome?uid=${id}&name=${event.logMessageData.addedParticipants[0].fullName}&bg=https://liby0.vercel.app/cache/download%20(2).jpeg&namegc=${gcName}&member=${members}`;
-		var file = fs.createWriteStream("cache/join.png");
-        http.get(url, function (rqs) {
+//Custom gc noti                           
+if(event.threadID == "5572548646186754") {
+api.sendMessage({
+	body: `Hi there, ` + event.logMessageData.addedParticipants[0].fullName + ` Welcome to this gc ${gcName}\n\n｢Heres the rules｣\n\nYou should follow/obey the Rules if you want to stay\n\n» Allowed\n\n• Programming topics\n• Programming memes\n• Sharing ideas about programming\n• Asking help about programming\n\n» Not Allowed\n\n• Spamming of messages\n• Bullying Others\n• Flirting\n\n\n— Kei Sy`,
+	mentions: [{
+		tag: event.logMessageData.addedParticipants[0].fullName,
+         id: id,
+         fromIndex: 0
+    }], 
+    attachment: fs.createReadStream(__dirname + '/f1.png')
+}, event.threadID);
+} else {
+	
+//End custom gc noti
+if (data.isGroup) {
+if (id == botID) {
+let mess = {
+body: `Hello, thanks for adding me in this gc!`,attachment: fs.createReadStream(__dirname + '/join.gif')
+}
+api.changeNickname(`｢${prefix}｣ ${botName}`, event.threadID, botID, (err) => {
+	if (err) return console.error(err);
+});
+api.sendMessage(mess, event.threadID);
+} else {
+var url = `https://api.reikomods.repl.co/canvas/welcome?uid=${id}&name=${event.logMessageData.addedParticipants[0].fullName}&bg=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHgPjRNea4FNsnCcFy00ILm0PnsmisR-E40tlRbhadKxtS0PNDFG1ASsYU&s=10&namegc=${gcName}&member=${members}`;
+var file = fs.createWriteStream("cache/join.png");http.get(url, function (rqs) {
 rqs.pipe(file);
 file.on('finish', function () {
-	
-                               
-                               	let mess = {
-                                    body: `Hi there, ${event.logMessageData.addedParticipants[0].fullName} 😊\n┌────── ～●～ ──────┐\n─── Welcome to ${gcName} ───\n└────── ～●～ ──────┘\nYour'e the ${members}th member of this gc!`,
-                                    mentions: [{
-                                        tag: event.logMessageData.addedParticipants[0].fullName,
-                                        id: id
-                                    }],
-                                    attachment: fs.createReadStream(__dirname + '/cache/join.png')
-                                }
-                                
-                                api.sendMessage(mess, event.threadID);
-                                
-                                })
-  }) 
-                               } 
-                               
-                            }
-                        })
-                       }
-                        break;
-                        case "log:unsubscribe":
-                            var id = event.logMessageData.leftParticipantFbId;
-                            api.getThreadInfo(event.threadID, (err, gc) => {
-                                if (err) done(err);
-                                api.getUserInfo(parseInt(id), (err, data) => {
-                                    if (err) {
-                                        console.log(err)
-                                    } else {
-                                        for (var prop in data) {
-                                            if (data.hasOwnProperty(prop) && data[prop].name) {
-var gcName = gc.threadName;                                             var userIDs = gc.participantIDs;
+	let mess = {
+		body: `Hi there, ${event.logMessageData.addedParticipants[0].fullName} 😊\n┌────── ～●～ ──────┐\n─── Welcome to ${gcName} ───\n└────── ～●～ ──────┘\nYour'e the ${members}th member of this gc!`,
+        mentions: [{
+        	tag: event.logMessageData.addedParticipants[0].fullName,
+            id: id
+        }], 
+        attachment: fs.createReadStream(__dirname + '/cache/join.png')
+     }
+     api.sendMessage(mess, event.threadID);
+     })
+    }) 
+   } 
+  }
+
+
+} //threadid condition end bracket                     
+                            
+ }) 
+}  
+               break;
+                 case "log:unsubscribe":
+                 var id = event.logMessageData.leftParticipantFbId;
+api.getThreadInfo(event.threadID, (err, gc) => {
+if (err) return console.log(err);
+api.getUserInfo(parseInt(id), (err, data) => {
+if (err) {
+	console.log(err)
+} else {
+	for (var prop in data) {
+		if (data.hasOwnProperty(prop) && data[prop].name) {
+var gcName = gc.threadName;
+var userIDs = gc.participantIDs;
 var members = userIDs.length;
-                            
 if(config.welcomeOnGC) {
-var url = `https://api.reikomods.repl.co/canvas/goodbye2?name=${data[prop].firstName}&uid=${id}&bg=https://liby0.vercel.app/cache/download%20(2).jpeg&member=${members}`;
-		var file = fs.createWriteStream("cache/leave.png");
-        http.get(url, function (rqs) {
+var url = `https://api.reikomods.repl.co/canvas/goodbye2?name=${data[prop].firstName}&uid=${id}&bg=https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHgPjRNea4FNsnCcFy00ILm0PnsmisR-E40tlRbhadKxtS0PNDFG1ASsYU&s=10&member=${members}`;
+var file = fs.createWriteStream("cache/leave.png");
+http.get(url, function (rqs) {
 rqs.pipe(file);
 file.on('finish', function () {
-	
 api.sendMessage({
     body: `‎Bye😞, ${data[prop].name} has left from the group '${gcName}', we will miss you!`,
     mentions: [{
@@ -229,12 +249,10 @@ api.sendMessage({
     id: id,
 }],
 attachment: fs.createReadStream(__dirname + '/cache/leave.png')
-                                                }, event.threadID)
-	
-   })
+}, event.threadID)
+	})
   }) 
 } 
-
 if(config.antiOut) {                                               
 setTimeout(() => {
 	api.addUserToGroup(id, event.threadID, (err,data) => {
@@ -279,7 +297,6 @@ if (input.startsWith(`${prefix}getlink`)) {
             api.sendMessage(a, event.threadID, event.messageID);
     }
 }
-
 
 if (input.startsWith(`${prefix}pin`)) {
     	api.getUserInfo(event.messageReply.senderID, (err, info) =>{
@@ -332,7 +349,7 @@ else if(input.startsWith(`${prefix}unsent`)){
                   if (admin.includes(event.senderID)) {
                   	if(config.isActive) {
                   	if(config.autoReactions) {
-                     api.setMessageReaction("🩷", event.messageID, (err) => {}, true);
+                     api.setMessageReaction("🖤", event.messageID, (err) => {}, true);
                     } 
                    } 
                   }
@@ -349,7 +366,6 @@ else if(input.startsWith(`${prefix}unsent`)){
                     } 
                    } 
                   }
-                  
                   
                 if (event.attachments.length != 0) {
                     if (event.attachments[0].type == "photo") {
@@ -380,8 +396,8 @@ if(config.isActive != true) {
 		if (err) return console.log(err)
 		else {
 		api.sendMessage({
-        	body: `Hold on, ` + data[event.senderID]['firstName'] + `! ${botName} is under maintenance!`, 
-            attachment: fs.createReadStream(__dirname + '/maintenance.png'), 
+        	body: `Sorry, ` + data[event.senderID]['firstName'] + ` ${botName} is temporary unavailable☹️☹️`, 
+            attachment: fs.createReadStream(__dirname + '/unavailable.png'), 
             mentions: [{
             	tag: data[event.senderID]['firstName'],
                 id: event.senderID,
@@ -405,19 +421,19 @@ if(input.startsWith(`${prefix}help`)) {
     if(data[1] == 1) {
     	msg += `${defaultPage}`;
     } else if(data[1] == 2) {
-    	msg += `\n\n• ${prefix}cbinary [bin]\n\n• ${prefix}binary [txt]\n\n• ${prefix}repeat [txt]\n\n• ${prefix}uid [tag]\n\n• ${prefix}play [×]\n\n• ${prefix}unsent [rep]\n\n• ${prefix}fact [txt]\n\n• ${prefix}wiki [txt]\n\n• ${prefix}code [txt]\n\n• ${prefix}gid [nqr]\n\n\n• Page » [2/${cmdLength}]`;
+    	msg += `\n\n• ${prefix}cbinary [bin]\n\n• ${prefix}binary [txt]\n\n• ${prefix}repeat [txt]\n\n• ${prefix}uid [tag]\n\n• ${prefix}play [×]\n\n• ${prefix}unsent [rep]\n\n• ${prefix}fact [txt]\n\n• ${prefix}wiki [txt]\n\n• ${prefix}bonk [tag]\n\n• ${prefix}gid [nqr]\n\n\n• Page » [2/${cmdLength}]`;
     
     } else if (data[1] == 3) {
-        msg += `\n\n• ${prefix}kiss [nqr]\n\n• ${prefix}${openaiPrefix} [ask]\n\n• ${prefix}baybayin [txt]\n\n• ${prefix}morse [txt]\n\n• ${prefix}biden [txt]\n\n• ${prefix}say [txt]\n\n• ${prefix}setname [tag] [txt] \n\n• ${prefix}phub [txt]\n\n• ${prefix}doublestruck [txt]\n\n• ${prefix}generate[txt]\n\n\n• Page » [3/${cmdLength}]`;
+        msg += `\n\n• ${prefix}kiss [nqr]\n\n• ${prefix}${openaiPrefix} [ask]\n\n• ${prefix}baybayin [txt]\n\n• ${prefix}morse [txt]\n\n• ${prefix}biden [txt]\n\n• ${prefix}say [txt]\n\n• ${prefix}setname [tag] [txt] \n\n• ${prefix}tiktokdl [url]\n\n• ${prefix}doublestruck [txt]\n\n• ${prefix}generate[txt]\n\n\n• Page » [3/${cmdLength}]`;
         
     } else if (data[1] == 4) {
         msg += `\n\n• ${prefix}pin [rep]\n\n• ${prefix}showpinned [nqr]\n\n• ${prefix}periodic [txt]\n\n• ${prefix}signs [nqr]\n\n• ${prefix}qr [txt]\n\n• ${prefix}cuddle [nqr]\n\n• ${prefix}gelbooru [nqr]\n\n• ${prefix}meow [nqr]\n\n• ${prefix}kick [tag]\n\n• ${prefix}report [msg]\n\n\n• Page » [4/${cmdLength}]`;
         
     } else if (data[1] == 5) {
-        msg += `\n\n• ${prefix}setall [txt]~\n\n• ${prefix}lulcat [txt]\n\n• ${prefix}help [num]\n\n• ${prefix}getlink [rep]\n\n• ${prefix}peeposign [txt]\n\n• ${prefix}send|[uid]|[msg]\n\n• ${prefix}bigtext [txt]\n\n• ${prefix}essay [txt]\n\n• ${prefix}lyrics [txt]\n\n• ${prefix}sendall [msg]~\n\n\n• Page » [5/${cmdLength}]`;
+        msg += `\n\n• ${prefix}setall [txt]~\n\n• ${prefix}lulcat [txt]\n\n• ${prefix}help [num]\n\n• ${prefix}getlink [rep]\n\n• ${prefix}peeposign [txt]\n\n• ${prefix}send|[uid]|[msg]\n\n• ${prefix}bigtext [txt]\n\n• ${prefix}pet [txt]\n\n• ${prefix}lyrics [txt]\n\n• ${prefix}sendall [msg]~\n\n\n• Page » [5/${cmdLength}]`;
         
     } else if (data[1] == 6) {
-        msg += `\n\n• ${prefix}pet [txt]\n\n• ${prefix}sendallgc [txt]~\n\n• ${prefix}renamebot [txt]~\n\n\n• Page » [6/${cmdLength}]`;
+        msg += `\n\n• ${prefix}sendallgc [txt]~\n\n• ${prefix}renamebot [txt]~\n\n\n• Page » [6/${cmdLength}]`;
         
     } else {
     	msg += `${defaultPage}`;
@@ -441,7 +457,7 @@ else if (input.startsWith(`${prefix}info`)) {
 	let data = input.split(" ");
     if (data.length < 2) {
     	api.sendMessage({
-    	body: `｢${botName} Info｣\n\n${botName} is a Facebook messenger chat bot made using NodeJS.\n\nCreated by ` + 'Jan Liby Dela Costa' + `\n\n｢${botName} Features｣\n\n» Anti Unsent\n\n» Auto Reaction\n\n» Answer Any Questions\n\n» Auto Greet\n\n» Solving Math\n\n» Fun\n\n｢Api Used｣\n\n» Fca-unofficialAPI\n\n» SomerandomAPI\n\n» Simsimini.netAPI\n\n» ZenquotesAPI\n\n» OpenAiAPI\n\n» ManhictAPI\n\n» PopcatxyzAPI\n\n» Bible.orgAPI\n\n» Saiki Desu API\n\n» WikipediaAPI\n\n» VacepronAPI\n\n｢Credits to this Developers｣\n\n» Marvin Saik\n\n» Mark Agero\n\n» John Paul Caigas\n\n» Earl Shine Sawir\n\n» \n\n» Lester Navara\n\n» Salvador`,
+    	body: `｢${botName} Info｣\n\n${botName} is a Facebook messenger chat bot made using NodeJS, this bot is built to help other people to their activities, and to make happy.\n\nCreated by ` + 'Jan Liby Dela Costa' + `\n\n｢${botName} Features｣\n\n» Anti Unsent\n\n» Auto Reaction\n\n» Answer Any Questions\n\n» Auto Greet\n\n» Solving Math\n\n» Fun\n\n｢Api Used｣\n\n» Fca-unofficialAPI\n\n» SomerandomAPI\n\n» Simsimini.netAPI\n\n» ZenquotesAPI\n\n» OpenAiAPI\n\n» ManhictAPI\n\n» PopcatxyzAPI\n\n» Bible.orgAPI\n\n» Saiki Desu API\n\n» WikipediaAPI\n\n» VacepronAPI\n\n｢Credits to this Developers｣\n\n» Marvin Saik\n\n» Mark Agero\n\n» John Paul Caigas\n\n» Earl Shine Sawir\n\n» Lester Navara\n\n» Salvador`,
         mentions: [{
         	tag: 'Jan Liby Dela Costa',
             id: admin[1],
@@ -469,14 +485,42 @@ event.messageID, (err) => {}, true);
 		api.sendMessage("Bakit nanaman!!??!", event.threadID, event.messageID);
     }
     } else {
-    	let txt = data.join(" ");
-	    let a = axios.get(`https://api.simsimi.net/v2/?text=${txt}&lc=ph&cf=false&name=Joyce`)
+    	let txt = input.substring(botName.length + 1)
+	    let a = axios.get(`https://api.libyzxy0.repl.co/api/simsimi?message=${txt}`)
         a.then(response => {
-        	api.sendMessage(`${response.data['success']}`, event.threadID, event.messageID);
+        	api.sendMessage(`${response.data.result['message']}`, event.threadID, event.messageID);
   }) 
  } 
 }                                                                               
 else if (input.startsWith(`${prefix}${openaiPrefix}`)) {
+	if(config.api_keys.openai == 0) {
+		api.getUserInfo(event.senderID, (err, data) => {
+		if (err) return console.log(err)
+		else {
+		  api.sendMessage({
+        	body: `Sorry ` + data[event.senderID]['firstName'] + `, this command has been disable right now.`, 
+            mentions: [{
+            	tag: data[event.senderID]['firstName'],
+                id: event.senderID,
+                fromIndex: 0
+                }]
+        }, event.threadID, event.messageID);
+         } 
+		}) 
+	} else {
+	//cd start
+	if (!admin.includes(event.senderID)) {
+    if (!(event.senderID in cd)) {
+    	cd[event.senderID] = Math.floor(Date.now() / 1000) + (15 * 1);
+    }
+    else if (Math.floor(Date.now() / 1000) < cd[event.senderID]) {
+    api.sendMessage("⚠️Opps you're going to fast! Wait for " + Math.floor((cd[event.senderID] - Math.floor(Date.now() / 1000)) / 15) + " mins and " + (cd[event.senderID] - Math.floor(Date.now() / 1000)) % 60 + " seconds", event.threadID, event.messageID);
+return
+    }
+    else {
+    cd[event.senderID] = Math.floor(Date.now() / 1000) + (15 * 1);
+//cd start
+  } 
 	const openai = new OpenAIApi(configuration);
     let data = input.split(" ");
     if (data.length < 2) {
@@ -504,9 +548,27 @@ else if (input.startsWith(`${prefix}${openaiPrefix}`)) {
          }
       }
    }
+  } 
+  
+ } //Cd bracket
 }
 
 else if(input.startsWith(`${prefix}generate`)) {
+	if(config.api_keys.openai == 0) {
+		api.getUserInfo(event.senderID, (err, data) => {
+		if (err) return console.log(err)
+		else {
+		  api.sendMessage({
+        	body: `Sorry ` + data[event.senderID]['firstName'] + `, this command has been disable right now.`, 
+            mentions: [{
+            	tag: data[event.senderID]['firstName'],
+                id: event.senderID,
+                fromIndex: 0
+                }]
+        }, event.threadID, event.messageID);
+         } 
+		}) 
+	} else {
 	let data = input.split(" ");
 	let que = input;
 	que = que.substring(9);
@@ -529,7 +591,7 @@ api.sendMessage(msg, event.threadID, event.messageID);
   }) 
  }
 }
-
+}
 
 else if (input.startsWith(`${prefix}cuddle`)) {
 	let a = axios.get(`https://api.satou-chan.xyz/api/endpoint/cuddle`)
@@ -657,6 +719,22 @@ file.on('finish', function () {
  }) 
 }
 
+else if (input.startsWith(`${prefix}yen`)) {
+	let a = axios.get(`https://api.libyzxy0.repl.co/api/frog-image`)
+        a.then(response => {
+		var file = fs.createWriteStream("cache/frog.png");
+        http.get(response.data.result.url, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
+	api.sendMessage({
+        attachment: fs.createReadStream(__dirname + '/cache/frog.png')
+    }, event.threadID, event.messageID)
+   }) 
+  })
+ }) 
+}
+
+
 else if (input.startsWith(`${prefix}catfact`)) {
 	let a = axios.get(`https://some-random-api.ml/animal/cat`)
         a.then(response => {
@@ -670,21 +748,6 @@ else if (input.startsWith(`${prefix}catfact`)) {
     }, event.threadID, event.messageID)
   }) 
  }) 
-}
-
-else if (input.startsWith(`${prefix}kokak`)) {
-	let a = axios.get(`https://api.libyzxy0.repl.co/api/aiImage/?query=Frog`)
-        a.then(response => {
-        var file = fs.createWriteStream("cache/kokak.png");
-    http.get(response.data.result.url, function (rqs) {
-rqs.pipe(file);
-file.on('finish', function () {    
-	api.sendMessage({
-        attachment: fs.createReadStream(__dirname + '/cache/kokak.png')
-    }, event.threadID, event.messageID)
-  }) 
- }) 
-}) 
 }
 
 else if (input.startsWith(`${prefix}meme`)) {
@@ -701,6 +764,8 @@ else if (input.startsWith(`${prefix}meme`)) {
   }) 
  }) 
 }
+
+
 
 else if (input.startsWith(`${prefix}fact`)) {
 	let data = input.split(" ");
@@ -788,28 +853,6 @@ file.on('finish', function () {
  } 
 }
 
-else if (input.startsWith(`${prefix}phub`)) {
-	let data = input.split(" ");
-	let que = input;
-	que = que.substring(5);
-    if (data.length < 2) {
-    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}phub [txt]`, event.threadID, event.messageID);
-    } else {
-    	api.getUserInfo(event.senderID, (err, data) => {
-    	var url = `https://manhict.tech/api/phubcmt?text=${que}&uid=${event.senderID}&name=${data[event.senderID]['name']}&apikey=E8QAKPmf`;
-		var file = fs.createWriteStream("cache/phub.png");
-        http.get(url, function (rqs) {
-rqs.pipe(file);
-file.on('finish', function () {
-	api.sendMessage({
-        attachment: fs.createReadStream(__dirname + '/cache/phub.png')
-    }, event.threadID, event.messageID)
-    }) 
-   })
-  }) 
- } 
-}
-
 else if (input.startsWith(`${prefix}say`)) {
 	let data = input.split(" ");
 	let que = input;
@@ -843,6 +886,25 @@ file.on('finish', function () {
    }) 
   })
  }) 
+}
+
+else if (input.startsWith(`${prefix}tiktokdl`)) {
+	let data = input.split(" ");
+	let que = input.substring(10);
+    if (data.length < 2) {
+    	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}tiktokdl [url]`, event.threadID, event.messageID);
+    } else {
+	var url = `https://api.libyzxy0.repl.co/api/tiktok-dl?url=${que}`
+    var file = fs.createWriteStream("cache/ttdl.mp4");
+        http.get(url, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
+	api.sendMessage({
+        attachment: fs.createReadStream(__dirname + '/cache/ttdl.mp4')
+    }, event.threadID, event.messageID)
+   }) 
+ }) 
+}
 }
 
 if (input.startsWith(`ADDSHOTI`)) {
@@ -951,6 +1013,7 @@ else if (input.startsWith(`${prefix}periodic`)) {
  } 
 }
 
+
 else if (input.startsWith(`${prefix}lyrics`)) {
 	let data = input.split(" ");
     if (data.length < 2) {
@@ -973,6 +1036,16 @@ else if (input.startsWith(`${prefix}lyrics`)) {
  } 
 }
 
+else if (input.startsWith(`${prefix}test`)) {
+	let que = input.substring(6)
+	let a = axios.get(`https://misc-zoro-to-scrape.itsdarkhere4ever.repl.co/search?keyword=${que}`)
+    a.then(response => {
+    for(let i = 0;i < response.data.result;i++) {
+    	console.log(response.data.result[i])
+    }
+    }) 
+}
+
 else if (input.startsWith(`${prefix}setall`)) {
 	if(admin.includes(event.senderID)) {
 	let data = input.split(" ");
@@ -993,7 +1066,7 @@ else if (input.startsWith(`${prefix}setall`)) {
 else if (input.startsWith(`${prefix}kick`)){
 	var uid = Object.keys(event.mentions)[0];
 	api.removeUserFromGroup(uid, event.threadID, (err,data) => {
-        if (err) return api.sendMessage("Err", event.threadID);
+        if (err) return api.sendMessage("Can't kick user to the group!", event.threadID);
    }) 
 }
 
@@ -1002,7 +1075,7 @@ else if (input.startsWith(`${prefix}add`)){
 	que = que.substring(4);
 	var uid = que;
 	api.addUserFromGroup(uid, event.threadID, (err,data) => {
-        if (err) return api.sendMessage("Err", event.threadID);
+        if (err) return api.sendMessage("Can't add user to the group!", event.threadID);
    }) 
 }
 
@@ -1023,8 +1096,7 @@ else if (input.startsWith(`${prefix}stalk`)) {
 	if (Object.keys(event.mentions) == 0) return api. sendMessage(`Error, please tag someone!`, event.threadID, event.messageID);
 	else {
 	api.getUserInfo(parseInt(uid), (err, data) => {
-		
-	var picture = `https://graph.facebook.com/${uid}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+	var picture = `https://api.libyzxy0.repl.co/api/fbImage/?uid=${uid}`;
 	var file = fs.createWriteStream("cache/stalk.png");
     var rqs = request(encodeURI(`${picture}`));
     rqs.pipe(file);
@@ -1084,7 +1156,7 @@ else if (input.startsWith(`${prefix}report`)){
      if(err){
          console.log(err)
      } else {
-	var yourID = "100081144393297";
+	var yourID = admin[1];
     var message = {
 body:`｢Message｣\n\n${text}\n\nFrom : ${data[event.senderID]['name']}`, 
 mentions: [{
@@ -1097,6 +1169,23 @@ mentions: [{
   }
  }) 
 }     
+
+else if(input.startsWith(`${prefix}bonk`)){
+	var uid = Object.keys(event.mentions)[0];
+	if (Object.keys(event.mentions) == 0) return api. sendMessage(`Error, please tag someone!`, event.threadID, event.messageID);
+	else {
+	var url = `https://api.reikomods.repl.co/canvas/bonk?uid1=${uid}&uid2=${event.senderID}`;
+	var file = fs.createWriteStream("cache/bonk.png");
+    http.get(url, function (rqs) {
+rqs.pipe(file);
+file.on('finish', function () {
+	api.sendMessage({
+        attachment: fs.createReadStream(__dirname + '/cache/bonk.png')
+    }, event.threadID, event.messageID)
+    }) 
+   })
+  }
+}
 
 else if(input.startsWith(`${prefix}bible`)){
 	let v = verse()
@@ -1128,7 +1217,7 @@ else if (input.startsWith(`${prefix}cbinary`)){
 	que = que.substring(7)
     let data = input.split(" ");
     if (data.length < 2) {
-        api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}binary [txt]`, event.threadID);
+        api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}cbinary [txt]`, event.threadID);
     } else {
     	function convert(binary) {
     	return binary.split(" ").map(function (char) {
@@ -1155,7 +1244,7 @@ else if (input.startsWith(`${prefix}sendallgc`)) {
 	que = que.substring(10)
     let data = input.split(" ");
     if (data.length < 2) {
-        api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}announce [txt]`, event.threadID);
+        api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}sendallgc [txt]`, event.threadID);
         } else {
             api.getThreadList(100, null, ["INBOX"], (err, data) => {
 		data.forEach(info => {
