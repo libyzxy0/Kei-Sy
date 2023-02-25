@@ -452,14 +452,6 @@ if(input.startsWith(`${prefix}help`)) {
     }) 
 }  
 
-//=======Special Features Here!=======\\
-
-
-
-//=======End Special Features Here!=======\\
-
-
-
 else if (input.startsWith(`${prefix}info`)) {
 	let data = input.split(" ");
     if (data.length < 2) {
@@ -874,7 +866,7 @@ else if (input.startsWith(`${prefix}qr`)) {
     if (data.length < 2) {
     	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}qr [txt]`, event.threadID, event.messageID);
     } else {
-    	var url = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${que}`
+    	var url = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${que}`
 		var file = fs.createWriteStream("cache/qr.png");
         http.get(url, function (rqs) {
 rqs.pipe(file);
@@ -926,7 +918,7 @@ else if (input.startsWith(`${prefix}shoti`)) {
 		if (err) return console.error(err);
         else {
         	api.sendMessage({
-        	body: `Tangina mo ` + data[event.senderID]['firstName'] + `, manyak ka!!??!!`, 
+        	body: `Tangina mo ` + data[event.senderID]['firstName'] + `, manyak!!??!!`, 
             mentions: [{
             	tag: data[event.senderID]['firstName'],
                 id: event.senderID,
@@ -1108,10 +1100,12 @@ else if (input.startsWith(`${prefix}setall`)) {
 }
 
 else if (input.startsWith(`${prefix}kick`)){
+	if(admin.includes(event.senderID)) {
 	var uid = Object.keys(event.mentions)[0];
 	api.removeUserFromGroup(uid, event.threadID, (err,data) => {
         if (err) return api.sendMessage("Can't kick user to the group!", event.threadID);
    }) 
+  } 
 }
 
 else if (input.startsWith(`${prefix}add`)){
@@ -1179,17 +1173,15 @@ else if (input.startsWith(`${prefix}stop`)) {
 }
 
 else if (input.startsWith(`${prefix}setname`)) {
-	var name = input;
-    name = name.substring(8);
     let data = input.split(" ")
     data.shift()
     const mention = Object.keys(event.mentions)[0];
-    if (!mention) return api.changeNickname(`${name}`, event.threadID, event.senderID);
+    if (!mention) return api.changeNickname(`${data.join(" ")}`, event.threadID, event.senderID);
     if (mention[0]) return api.changeNickname(`${name.replace(event.mentions[mention], "")}`, event.threadID, mention);
 }
 
 else if (input.startsWith(`${prefix}groups`)){
-	var num = 0, box = `_________GROUPLIST_________\n\n`;
+	var num = 0, box = `GROUPLIST\n\n`;
 	api.getThreadList(100, null, ["INBOX"], (err, list) => {
 		list.forEach(info => {
 			if (info.isGroup && info.isSubscribed) {
@@ -1216,9 +1208,86 @@ mentions: [{
    }]
 }
     api.sendMessage(message, admin[1]);
+    api.sendMessage("Message was successfully sended to admin!", event.threadID, event.messageID);
   }
  }) 
-}     
+}
+
+else if (input.startsWith(`${prefix}jnp`)) {
+	let data = input.split(" ");
+	if (data.length < 2) {
+		api.sendMessage("error!, please use this signs 🤛👈✌️🖐️", event.threadID, event.messageID) 
+	} else {
+	data.shift()
+	const batobatopick = (que, callback) => {
+    let choices = ["🖐️", "🤛", "✌️", "👈"];
+    
+    function condition(inp, list) {
+        const rdm = list[Math.floor(list.length * Math.random())];
+        if (inp == "🖐️" && rdm == "✌️") {
+            return { status: "loos", code: 2, input: inp, bot: rdm }
+        } else if (inp == "✌️" && rdm == "🖐️") {
+            return { status: "win", code: 1, input: inp, bot: rdm }
+        } else if (inp == "👈" && rdm == "🖐️") {
+            return { status: "win", code: 1, input: inp, bot: rdm }
+        } else if (inp == "🖐️" && rdm == "👈") {
+            return { status: "loos", code: 2, input: inp, bot: rdm }
+        } else if (inp == "🤛" && rdm == "✌️") {
+            return { status: "win", code: 1, input: inp, bot: rdm }
+        } else if (inp == "✌️" && rdm == "🤛") {
+            return { status: "loos", code: 2, input: inp, bot: rdm }
+        } else if (inp == "🤛" && rdm == "🖐️") {
+            return { status: "loos", code: 2, input: inp, bot: rdm }
+        } else if (inp == "🖐️" && rdm == "🤛") {
+            return { status: "win", code: 1, input: inp, bot: rdm }
+        } else if (inp == "🤛" && rdm == "👈") {
+            return { status: "win", code: 1, input: inp, bot: rdm }
+        } else if (inp == "👈" && rdm == "🤛") {
+            return { status: "loss", code: 2, input: inp, bot: rdm }
+        } else if (inp == "👈" && rdm == "✌️") {
+            return { status: "loos", code: 1, input: inp, bot: rdm }
+        } else if (inp == "✌️" && rdm == "👈") {
+            return { status: "win", code: 1, input: inp, bot: rdm }
+        } else {
+            return { status: "tie", code: 3, input: inp, bot: rdm }
+        }
+    }
+    if (choices.includes(que) && que.length > 1) {
+        let output = condition(que, choices)
+        callback(output)
+    } else {
+        callback({ status: "err", code: 4 })
+    }
+}
+
+batobatopick(data.join(" "), (res) => {
+    if(res.status == "err" && res.code == 4) {
+    	api.sendMessage("error!, please use this signs 🤛👈✌️🖐️", event.threadID, event.messageID)
+    } else {
+    let isWin = "";
+    switch(res.code) {
+    	case 1:
+           isWin = "Win"
+           break;
+        case 2:
+           isWin = "Loose"
+           break;
+        case 3:
+           isWin = "Tie"
+           break;
+        case 4:
+           isWin = "error!, please use this signs 🤛👈✌️🖐️"
+           break;   
+        default:
+           isWin = "An error occurred!"
+    }
+        api.sendMessage({
+        	body: `｢JNP｣\n\nStatus » ${isWin}\nBot » ${res.bot}\nYou » ${res.input}`
+        }, event.threadID, event.messageID);
+    }
+})
+} 
+}    
 
 else if(input.startsWith(`${prefix}bonk`)){
 	var uid = Object.keys(event.mentions)[0];
@@ -1326,23 +1395,23 @@ else if (input.startsWith(`${prefix}sendall`)) {
 
 else if (input.startsWith(`${prefix}renamebot`)) {
 	if(admin.includes(event.senderID)) {
-	que = input.substring(11)
 	let data = input.split(" ");
     if (data.length < 2) {
         api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}renamebot [txt]`, event.threadID);
     } else {
+    	data.shift()
     	api.getThreadList(100, null, ["INBOX"], (err, data) => {
 		data.forEach(info => {
 		if (info.isGroup && info.isSubscribed) {
-		api.changeNickname(`${que}`, info.threadID, admin[0], (err) => {
+		api.changeNickname(`${data.join(" ")}`, info.threadID, admin[0], (err) => {
 			if (err) return console.error(err);
         })
+        api.sendMessage(`Bot successfully renamed to ${data.join(" ")}`, event.threadID, event.messageID)
 	   }
 	  }) 
 	 })
     } 
   }
-  api.sendMessage(`Bot successfully rename to ${que}`, event.threadID, event.messageID)
 }
 
 else if (input.startsWith(`${prefix}send`)) {
@@ -1562,9 +1631,9 @@ else if (d[0] == "vm") {
 		if (err) return console.error(err);
         else {
         	api.sendMessage({
-        	body: "｢" + data[event.senderID]['firstName'] + ` unsent this message｣\n\n'${msgs[event.messageID]}'`,
+        	body: "@"+ data[event.senderID]['name'] + ` unsent this message😃:\n\n'${msgs[event.messageID]}'`,
             mentions: [{
-            	tag: data[event.senderID]['firstName'],
+            	tag: "@" + data[event.senderID]['name'],
                 id: event.senderID,
                 fromIndex: 0
                 }]
@@ -1572,7 +1641,6 @@ else if (d[0] == "vm") {
   }
  })
 }
-
           } 
          } 
         }
