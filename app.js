@@ -950,16 +950,19 @@ file.on('finish', function () {
 } 
 
 if (input.startsWith(`/addshoti`)) {
-	let q = input;
-	q = q.substring(9)
-	let a = axios.get(`http://api.libyzxy0.repl.co/api/addshoti?url=${q}`)
-    a.then(response => {
-    	if(err) {
-            console.log(err)
-        } else {
-        	api.sendMessage(`Added successfully!`, event.threadID, event.messageID); 
-        } 
-    })        
+	let data = input.split(" ");
+	if(data.length < 2) {
+		api.sendMessage(`⚠️ Invalid use of command!\n💡 Usage: /addshoti [url]`, event.threadID, event.messageID);
+	} else {
+		data.shift() 
+		let a = axios.get(`http://api.libyzxy0.repl.co/api/shoti?url=${data.join(" ")}`)
+        a.then(response => {
+        	if(err) return console.log(err)
+            else {
+            	api.sendMessage(`${response.data.message}`, event.threadID, event.messageID);
+            }
+    	})
+    }       
 }
 
 
