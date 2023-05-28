@@ -4,7 +4,7 @@ const config = {
   active: true, 
   features: {
     emojiReaction: "", 
-    greetings: false, 
+    greetings: true, 
     antiUnsent: true,
     antiOut: false, 
     welcomeOnGC: true,
