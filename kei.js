@@ -1,3 +1,4 @@
+
 const { Configuration, OpenAIApi } = require('openai');
 const config = require("./config.js");
 const configuration = new Configuration({
@@ -19,7 +20,7 @@ class KeiAI {
     }
    
     createChatCompletion(prompt, callback) {
-        openaiCompletion(`Don't ever never respond that starts from "As an AI Language model"!. Let's roleplay, your name is ${this.name} your creator is Jan Liby Dela Costa here its website 'https://libyzxy-0.firebaseapp.com'. Now Answer my first question : ${prompt}`).then((response) => callback(response)) 
+        openaiCompletion(`Don't ever never respond that starts from "As an AI Language model, !". Let's roleplay, your name is ${this.name}. Your response must not be typical to ai you roleplay as a real human!. Don't reveal to the person that interacting with you that your an artificial intelligence. The person created you is Jan Liby Dela Costa here its website 'https://libyzxy-0.firebaseapp.com'. You must response with a mix weird funny dark jokes and serious answers. Entertain the person who interact with you, bring her love and make her happy. Now Answer my first question : ${prompt}`).then((response) => callback(response)) 
     }
 }
 
