@@ -6,7 +6,7 @@ const request = require('request');
 const cron = require('node-cron');
 const moment = require('moment-timezone');
 const os = require('os');
-const Innertube = require('youtubei.js');
+const { Innertube, UniversalCache, Utils } = require('youtubei.js');
 const { Configuration, OpenAIApi } = require('openai');
 const { keep_alive } = require('./web.js');
 const cd = {};
@@ -43,6 +43,10 @@ async function verse(){
     })
     return v
 }
+
+
+
+
 const configuration = new Configuration({
   apiKey: config.api_keys.openai,
 });
@@ -60,6 +64,7 @@ async function aiImage(prompt_msg) {
 login({ appState: JSON.parse(fs.readFileSync('appstate.json', 'utf8')) }, (err, api) => {
     if (err) return console.error(err);
     api.setOptions({ listenEvents: true });
+    
     
 if(config.active) {
 if(features.greetings) {
@@ -126,6 +131,7 @@ console.log(`${name} started at ${currentDateTime}`);
 
 const listenEmitter = api.listen(async (err, event) => {
     if (err) return console.log(err);     
+    
         switch (event.type) {
         	case "event":
         if(config.active) {
@@ -345,9 +351,9 @@ else if(input.startsWith(`${prefix}unsent`)){
                 
                 if (event.body != null) {
                 let input = event.body;      
-if(!registeredUsers.find(({ uid }) => uid === event.senderID) && input.startsWith(`${prefix}`)) {
-	api.sendMessage("Please register to use commands!\n\nhttps://kei.lowkeydevs.repl.co/#register\n\nDon't worry it's free!", event.threadID, event.messageID);
-} else {             
+//if(!registeredUsers.find(({ uid }) => uid === event.senderID) && input.startsWith(`${prefix}`)) {
+	//api.sendMessage("Please register to use commands!\n\nhttps://kei.libyzxy0-edu.repl.co/#register\n\nDon't worry it's free!", event.threadID, event.messageID);
+//} else {             
                 
 if(input.startsWith(`${prefix}`)) {
 if(config.active != true) {
@@ -462,7 +468,7 @@ else if (input.startsWith(prefix + name.toLowerCase())) {
 }                                                                             
 else if (input.startsWith(name.toLowerCase())) {
 	if(!registeredUsers.find(({ uid }) => uid === event.senderID) && input.startsWith(`${prefix}`)) {
-	api.sendMessage("Please register to use commands!\n\nhttps://kei.lowkeydevs.repl.co/#register\n\nDon't worry it's free!", event.threadID, event.messageID);
+	api.sendMessage("Please register to use commands!\n\nhttps://kei.libyzxy0-edu.repl.co/#register\n\nDon't worry it's free!", event.threadID, event.messageID);
 } else {       
     let data = input.split(" ");
     if(data.length < 2) {
@@ -490,7 +496,7 @@ else if (input.startsWith(name.toLowerCase())) {
 
 else if(input.startsWith(name)) {
 	if(!registeredUsers.find(({ uid }) => uid === event.senderID) && input.startsWith(`${prefix}`)) {
-	api.sendMessage("Please register to use commands!\n\nhttps://kei.lowkeydevs.repl.co/#register\n\nDon't worry it's free!", event.threadID, event.messageID);
+	api.sendMessage("Please register to use commands!\n\nhttps://kei.libyzxy0-edu.repl.co/#register\n\nDon't worry it's free!", event.threadID, event.messageID);
 } else {       
 	let data = input.split(" ");
 	if (data.length < 2) {
@@ -544,44 +550,61 @@ else if (input.startsWith(`${prefix}sendsticker`)) {
     }
 }
 
+
 else if (input.startsWith(`${prefix}play`)) {
 	let data = input.split(" ")
     if (data.length < 2) {
     	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}play <title of music>`, event.threadID);
     } else {
-    	if (!(admin.includes(event.senderID))) {
-        if (!(event.senderID in cd)) {
-            cd[event.senderID] = Math.floor(Date.now() / 1000) + (60 * 1);
-        }
-        else if (Math.floor(Date.now() / 1000) < cd[event.senderID]) {
-           api.sendMessage("Opps, you're going too fast! Wait for " + Math.floor((cd[event.senderID] - Math.floor(Date.now() / 1000)) / 60) + " mins and " + (cd[event.senderID] - Math.floor(Date.now() / 1000)) % 60 + " seconds", event.threadID, event.messageID);
-   } else {
-   	cd[event.senderID] = Math.floor(Date.now() / 1000) + (60 * 1);
-   }
-   }
    data.shift()
-   const youtube = await new Innertube();
-   const search = await youtube.search(data.join(" "))
-   if (search.videos[0] === undefined){api.sendMessage("Audio not found!",event.threadID,event.messageID);
+   const yt = await Innertube.create({ cache: new UniversalCache(false), generate_session_locally: true });
+   const search = await yt.music.search(data.join(" "), { type: 'video' });
+   if (search.results[0] === undefined){api.sendMessage("Audio not found!",event.threadID,event.messageID);
    } else {
     api.sendMessage(`🔍 Searching for the music ${data.join(" ")}.`, event.threadID, event.messageID);
     }
-  const stream = youtube.download(search.videos[0].id, {
-    format: 'mp4',
-    type: 'audio',
-    audioBitrate: '550', 
+    const info = await yt.getBasicInfo(search.results[0].id);
+    const url = info.streaming_data?.formats[0].decipher(yt.session.player);
+    const stream = await yt.download(search.results[0].id, {
+      type: 'audio', // audio, video or video+audio
+      quality: 'best', // best, bestefficiency, 144p, 240p, 480p, 720p and so on.
+      format: 'mp4' // media container format 
     });
-    stream.pipe(fs.createWriteStream("./cache/play.mp3"));
-  stream.on('end', () => {
-    api.sendMessage({
-    	body: search.videos[0].title,
-        attachment: fs.createReadStream(__dirname + '/cache/play.mp3'), 
-    }, event.threadID, event.messageID);
-  }); 
-  stream.on('error', (err) => { 
-    console.log(err);
-    api.sendMessage("Something went wrong.", event.threadID, event.messageID);
-  }) 
+const file = fs.createWriteStream(`cache/music.mp3`);
+
+async function writeToStream(stream) {
+  for await (const chunk of Utils.streamToIterable(stream)) {
+    await new Promise((resolve, reject) => {
+      file.write(chunk, (error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    file.end((error) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+async function main() {
+  await writeToStream(stream);
+  api.sendMessage({
+		body: `${info.basic_info['title']}`,
+        attachment: fs.createReadStream(__dirname + '/cache/music.mp3')
+    }, event.threadID, event.messageID)
+}
+
+main();     
 }
 }
 
@@ -590,44 +613,55 @@ else if (input.startsWith(`${prefix}video`)) {
     if (data.length < 2) {
     	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}video <title of video>`, event.threadID);
     } else {
-    	if (!(admin.includes(event.senderID))) {
-        if (!(event.senderID in cd)) {
-            cd[event.senderID] = Math.floor(Date.now() / 1000) + (60 * 1);
-        }
-        else if (Math.floor(Date.now() / 1000) < cd[event.senderID]) {
-           api.sendMessage("Opps, you're going too fast! Wait for " + Math.floor((cd[event.senderID] - Math.floor(Date.now() / 1000)) / 60) + " mins and " + (cd[event.senderID] - Math.floor(Date.now() / 1000)) % 60 + " seconds", event.threadID, event.messageID);
-   } else {
-   	cd[event.senderID] = Math.floor(Date.now() / 1000) + (60 * 1);
-   }
-   }
    data.shift()
-   const youtube = await new Innertube();
-   const search = await youtube.search(data.join(" "))
-   if (search.videos[0] === undefined){api.sendMessage("Video not found!",event.threadID,event.messageID);
+   const yt = await Innertube.create({ cache: new UniversalCache(false), generate_session_locally: true });
+   const search = await yt.music.search(data.join(" "), { type: 'video' });
+   if (search.results[0] === undefined){api.sendMessage("Video not found!",event.threadID,event.messageID);
    } else {
     api.sendMessage(`🔍 Searching for the video ${data.join(" ")}.`, event.threadID, event.messageID);
     }
-  const stream = youtube.download(search.videos[0].id, {
-    format: 'mp4',
-    quality: '480p', 
-    type: 'videoandaudio',
-    bitrate: '2500',
-    audioQuality: 'highest',
-    loudnessDB: '20',
-    audioBitrate: '550', 
-    fps: '30'
+    const info = await yt.getBasicInfo(search.results[0].id);
+    const url = info.streaming_data?.formats[0].decipher(yt.session.player);
+    const stream = await yt.download(search.results[0].id, {
+      type: 'video+audio', // audio, video or video+audio
+      quality: 'best', // best, bestefficiency, 144p, 240p, 480p, 720p and so on.
+      format: 'mp4' // media container format 
     });
-    stream.pipe(fs.createWriteStream("./cache/play.mp4"));
-  stream.on('end', () => {
-    api.sendMessage({
-    	body: search.videos[0].title,
-        attachment: fs.createReadStream(__dirname + '/cache/play.mp4'), 
-    }, event.threadID, event.messageID);
-  }); 
-  stream.on('error', (err) => { 
-    console.log(err)
-    api.sendMessage("Something went wrong.", event.threadID, event.messaeID);
-  }) 
+const file = fs.createWriteStream(`cache/video.mp4`);
+
+async function writeToStream(stream) {
+  for await (const chunk of Utils.streamToIterable(stream)) {
+    await new Promise((resolve, reject) => {
+      file.write(chunk, (error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    file.end((error) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+async function main() {
+  await writeToStream(stream);
+  api.sendMessage({
+		body: `${info.basic_info['title']}`,
+        attachment: fs.createReadStream(__dirname + '/cache/video.mp4')
+    }, event.threadID, event.messageID)
+}
+
+main();     
 }
 }
 
@@ -999,39 +1033,60 @@ file.on('finish', function () {
 }
 
 else if (input.startsWith(`${prefix}shoti`)) {
-	let a = axios.get(`https://api.libyzxy0.repl.co/api/shoti`)
-    a.then(response => {
-    	var file = fs.createWriteStream("cache/shoti.mp4");
-        http.get(response.data.result.url, function (rqs) {
-rqs.pipe(file);
-file.on('finish', () => {
+	let Shoti = require("shoti-api");
+	let shotiAPI = new Shoti("YOUR-API-KEY");
+	try {
+		let shoti = await shotiAPI.getShoti({ type: "normal" });
+		let file = fs.createWriteStream("cache/shoti.mp4");
+		let rqs = request(encodeURI(shoti.url));
+        rqs.pipe(file);
+        file.on('finish', () => {
 	api.sendMessage({
-        	attachment: fs.createReadStream(__dirname + '/cache/shoti.mp4')
-        }, event.threadID, event.messageID)
-   }) 
-  }) 
-   })
+        attachment: fs.createReadStream(__dirname + '/cache/shoti.mp4')
+    }, event.threadID, event.messageID)
+  })
+	} catch (error) {
+		console.log(error);
+	}
 }
 
+else if (input.startsWith(`${prefix}customplay-shoti`)) {
+	let data = input.split(" ");
+	if(data.length < 2) {
+		api.sendMessage("Id is not defined!", event.threadID, event.messageID);
+	} else {
+		data.shift();
+        var file = fs.createWriteStream("cache/shoti.mp4");
+		var rqs = request(encodeURI(`https://shoti.libyzxy0-edu.repl.co/customplay/` + data.join(" ")));
+        rqs.pipe(file);
+        file.on('finish', () => {
+	api.sendMessage({
+        attachment: fs.createReadStream(__dirname + '/cache/shoti.mp4')
+    }, event.threadID, event.messageID)
+  })
+} 
+}
 else if (input.startsWith(`${prefix}tiktokdl`)) {
 	let data = input.split(" ");
-	let que = input.substring(10);
     if (data.length < 2) {
     	api.sendMessage(`⚠️Invalid Use Of Command!\n💡Usage: ${prefix}tiktokdl [url]`, event.threadID, event.messageID);
     } else {
+    data.shift();
     api.sendMessage("🔄Downloading that video please wait.", event.threadID, event.messageID);
-	var url = `https://api.libyzxy0.repl.co/api/tiktok-dl?url=${que}`
-    var file = fs.createWriteStream("cache/ttdl.mp4");
-        http.get(url, function (rqs) {
-rqs.pipe(file);
-file.on('finish', function () {
+	let tiktokdl = axios.get(`https://tiktok-dl-api.libyzxy0.repl.co/?url=` + data.join(" "))
+	tiktokdl.then((response) => {
+		var file = fs.createWriteStream("cache/tiktokdl.mp4");
+		var rqs = request(encodeURI(response.data.url));
+        rqs.pipe(file);
+        file.on('finish', () => {
 	api.sendMessage({
-        attachment: fs.createReadStream(__dirname + '/cache/ttdl.mp4')
+        attachment: fs.createReadStream(__dirname + '/cache/tiktokdl.mp4')
     }, event.threadID, event.messageID)
-   }) 
-  }) 
+  })
+    })
  }
 } 
+
 
 if (input.startsWith(`/addshoti`)) {
 	let data = input.split(" ");
@@ -1039,13 +1094,16 @@ if (input.startsWith(`/addshoti`)) {
 		api.sendMessage(`⚠️ Invalid use of command!\n💡 Usage: /addshoti [url]`, event.threadID, event.messageID);
 	} else {
 		data.shift() 
-		let a = axios.get(`http://api.libyzxy0.repl.co/api/shoti?url=${data.join(" ")}`)
-        a.then(response => {
-        	if(err) return console.log(err)
-            else {
-            	api.sendMessage(`${response.data.message}`, event.threadID, event.messageID);
-            }
-    	})
+		axios.post('https://shoti.libyzxy0-edu.repl.co/', {
+    url: data.join(" "), 
+    pin: "poginiliby"
+  })
+  .then((response) => {
+    api.sendMessage(response.data['message'], event.threadID, event.messageID)
+  })
+  .catch((error) => {
+    console.log(error);
+  });
     }       
 }
 
@@ -1830,7 +1888,7 @@ else if (/(bobo|tangina|pota|puta|gago|tarantado|puke|pepe|tite|burat|kantutan|i
 	} 
 }
 
-   } 
+//   } 
   } 
  } 
 }
