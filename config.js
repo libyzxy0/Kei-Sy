@@ -13,9 +13,8 @@ const config = {
   api_keys: {
      openai: process.env.OPEN_AI_KEY
   },
-  banned: require("./cache/bannedUsers.json"), 
-  admin: require("./cache/admins.json"),
-  loves: require("./cache/loveUsers.json"), 
-  registeredUsers: require("./data/registeredUsers.json")
+  banned: [], 
+  admin: [],
+  loves: [],
 }
 module.exports = config;
